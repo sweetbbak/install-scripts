@@ -1,0 +1,34 @@
+#!/bin/bash
+
+url="$1"
+[ -z "$url" ] && {
+    printf "%s\n" "${0} [url] "
+    exit 1
+}
+name="$(basename "$url")"
+noveldir="$HOME/novels/Scribble Hub"
+savedir="$(pwd)"
+
+# cd into the weird default dir
+
+cd ~/.config/novelsave/data || exit 1
+novelsave process "$url" --target text
+
+printf '%s\n' "$(gum style --foreground=212 "would you like to copy the novel to cwd?")"
+
+gum confirm && {
+    copy=$(fd . "$noveldir" --absolute-path -td -d1 | fzf --reverse --height=15% --cycle)
+} || exit
+
+if [ -n "$copy" ]; then
+    # old directory name
+    bname="$(basename "$copy")"
+    # full path > pwd
+    copy="$(realpath "$copy")"
+    cp -r "$copy" "$savedir"
+
+    # mv to vmshare or pwd and rename to url-safe name
+    [ -d "${savedir}/${bname}" ] && {
+        mv "${savedir}/${bname}" "${savedir}/${name}"
+    }
+fi
