@@ -23,6 +23,12 @@ mkdir -p ~/.config/zsh
 mkdir -p ~/.config/zsh/plugins
 mkdir -p ~/github
 
+mv ./zsh ~/.config
+mv ./helix ~/.config
+mv ./starship ~/.config
+mv ./ranger ~/.config
+mv ./bin ~
+
 termux-change-repo
 termux-setup-storage
 
@@ -86,20 +92,20 @@ for x in "${apt_installs[@]}"; do
     fi
 done
 
-for x in "${pips[@]}"; do
-    if ! command -v "$x" >/dev/null; then
-        pip install "$x"
-        printf "installing: ${green}${x}${na}\n"
-    else
-        printf "${red}${x}${na} already installed\n"
-    fi
-done
+# for x in "${pips[@]}"; do
+#     if ! command -v "$x" >/dev/null; then
+#         pip install "$x"
+#         printf "installing: ${green}${x}${na}\n"
+#     else
+#         printf "${red}${x}${na} already installed\n"
+#     fi
+# done
 
-for x in "${pipxs[@]}"; do
-    if ! command -v "$x" >/dev/null; then
-        pipx install "$x"
-        printf "installing: ${green}${x}${na}\n"
-    else
-        printf "${red}${x}${na} already installed\n"
-    fi
-done
+# for x in "${pipxs[@]}"; do
+#     if ! command -v "$x" >/dev/null; then
+#         pipx install "$x"
+#         printf "installing: ${green}${x}${na}\n"
+#     else
+#         printf "${red}${x}${na} already installed\n"
+#     fi
+# done
