@@ -30,6 +30,7 @@ mv ./ranger ~/.config
 mv ./bin ~
 
 termux-change-repo
+pkg update && pkg upgrade
 termux-setup-storage
 
 # base ZSH functionality
