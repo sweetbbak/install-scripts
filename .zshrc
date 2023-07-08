@@ -1,53 +1,18 @@
-export EDITOR='helix'
+export EDITOR='hx'
 export SHELL=/bin/bash
-# export PATH="$PATH:/usr/bin/python.311"
 
 export HISTFILE=~/.zsh_history
 export HISTSIZE=100000
 export SAVEHIST=100000
 export HISTDUP=erase
 
-export VISUAL='kitty helix'
-# export PAGER='less -R'
 export MANPAGER="sh -c 'sed -e s/.\\\\x08//g | bat -p -l man'"
 export PAGER='bat --color=always'
 export DIFFPROG="nvim -d"
-export DOTBARE_DIR="$HOME/.dotfiles"
-export DOTBARE_TREE="$HOME"
-export DOTBARE_PREVIEW="bat -n {}"
-export DOTBARE_BACKUP="/home/hdd/dots-backup"
 
-alias piper="/home/sweet/Documents/piper/piper --model ~/Documents/tts-rhaspy/en-us-amy-low.onnx --output_raw | aplay -r 16000 -c 1 -f S16_LE -t raw"
-
-# export BAT_THEME="Catppuccin-mocha"
 LESS_TERMCAP_md=$'\E[01;31m' LESS_TERMCAP_me=$'\E[0m' GROFF_NO_SGR=1
 LESS_TERMCAP_se=$'\E[0m' LESS_TERMCAP_so=$'\E[01;32m'
 LESS_TERMCAP_us=$'\E[04;33m' LESS_TERMCAP_ue=$'\E[0m'
-
-# --- Pywal ---
-# shellcheck source=/dev/null
-# source "$HOME/.cache/wal/colors.sh"
-
-# --- Fzf-nvim-switcher --- 
-# uses neovim nightly 9+
-alias nvim-lazy="NVIM_APPNAME=LazyVim nvim"
-alias nvim1="NVIM_APPNAME=nvim-ide nvim"
-# alias nvim-chad="NVIM_APPNAME=nvim-ditsuke nvim"
-# alias nvim-astro="NVIM_APPNAME=AstroNvim nvim"
-
-function nvims() {
-  items=("default" "MyNvim" "LazyVim" "nvim-ide" "AstroNvim")
-  config=$(printf "%s\n" "${items[@]}" | fzf --prompt=" Neovim Config  " --height=~50% --layout=reverse --border --exit-0)
-  if [[ -z $config ]]; then
-    echo "Nothing selected"
-    return 0
-  elif [[ $config == "default" ]]; then
-    config=""
-  fi
-  NVIM_APPNAME=$config nvim "$@"
-}
-
-bindkey -s ^a "nvims\n"
 
 # --- fzf tab ---
 # shellcheck source=/dev/null
@@ -57,12 +22,9 @@ source "$HOME/github/fzf-tab/fzf-tab.plugin.zsh"
 source "$HOME/.config/zsh/plugins/fzf-history/zsh-fzf-history-search.zsh"
 zstyle ':autocomplete:*' default-context history-incremental-search-backward
 
-# fzf history
-# source ~/github/zsh-autocomp/zsh-autocomplete.plugin.zsh
-
 # Starship
 # export STARSHIP_CONFIG=~/.config/starship/starship.toml
-export STARSHIP_CONFIG=~/.config/starship.toml
+export STARSHIP_CONFIG=~/.config/starship/starship.toml
 eval "$(starship init zsh)"
 
 # --- Keys ---
@@ -97,6 +59,7 @@ zstyle ':fzf-tab:complete:cd:*' fzf-preview "exa -1 --color=always $realpath"
 zstyle ':fzf-tab:*' switch-group ',' '.'
 
 ## tab sources
+# shellcheck source=/dev/null
 source ~/.config/zsh/plugins/fzf-tab-source/*.zsh
 
 # History configurations
@@ -117,9 +80,8 @@ autoload -U up-line-or-beginning-search
 autoload -U down-line-or-beginning-search
 zle -N up-line-or-beginning-search
 zle -N down-line-or-beginning-search
-bindkey "^[[A" up-line-or-beginning-search # Up
-bindkey "^[[B" down-line-or-beginning-search # Down
-
+bindkey "^[[A" up-line-or-beginning-search        # Up
+bindkey "^[[B" down-line-or-beginning-search      # Down
 bindkey ' ' magic-space                           # do history expansion on space
 bindkey '^U' backward-kill-line                   # ctrl + U
 bindkey '^[[3;5~' kill-word                       # ctrl + Supr
@@ -132,29 +94,8 @@ bindkey '^[[H' beginning-of-line                  # home
 bindkey '^[[F' end-of-line                        # end
 bindkey '^[[Z' undo                               # shift + tab undo last action
 
-# configure `time` format
-TIMEFMT=$'\nreal\t%E\nuser\t%U\nsys\t%S\ncpu\t%P'
-
 # Zoxide
 eval "$(zoxide init zsh)"
-
-# --- ani-cli ---
-# export ANI_CLI_EXTERNAL_MENU=0
-
-#-----------[NNN]---------------------#
-# export NNN_OPTS="H" # 'H' shows the hidden files. Same as option -H (so 'nnn -deH')
-# export LC_COLLATE="C" # hidden files on top
-# export NNN_FIFO=/tmp/nnn.fifo # temporary buffer for the previews
-# export NNN_PLUG='o:fzopen;e:-!sudo -E nvim $nnn*;c:cdpath;u:getplugs;i:imgview;h:-!hx $nnn*;p:preview-tui;x:!chmod +x $nnn;m:!mpv $nnn'
-# export SPLIT='v' # to split Kitty vertically
-
-# NNN_TMPFILE='/tmp/.lastd'
-# BLK="04" CHR="04" DIR="04" EXE="00" REG="00" HARDLINK="00" SYMLINK="06" MISSING="00" ORPHAN="01" FIFO="0F" SOCK="0F" OTHER="02"
-# export NNN_FCOLORS="$BLK$CHR$DIR$EXE$REG$HARDLINK$SYMLINK$MISSING$ORPHAN$FIFO$SOCK$OTHER"
-
-# if [ -f /usr/share/nnn/quitcd/quitcd.bash_zsh ]; then
-#     source /usr/share/nnn/quitcd/quitcd.bash_zsh
-# fi
 
 # --- Sources ---
 # source aliases and personal scripts
@@ -167,13 +108,13 @@ source "$HOME/.config/zsh/fzf.zsh"
 # shellcheck source=/dev/null
 # source "$HOME/.config/zsh/plugins/xport.zsh"
 # shellcheck source=/dev/null
-# source ~/.config/zsh/plugins/colored-man.zsh
+source "$HOME/.config/zsh/plugins/colored-man.zsh"
 # shellcheck source=/dev/null
 source "$HOME/.config/zsh/zplugs/dirhistory/dirhistory.plugin.zsh"
-
 # source auto suggestions and syntax highlighting (syntax needs to be last)
 # shellcheck source=/dev/null
 source "$HOME/.config/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
+
 # ZSH_AUTOSUGGEST_STRATEGY=(history)
 # Remove forward-char widgets from ACCEPT
 # ZSH_AUTOSUGGEST_ACCEPT_WIDGETS=("${(@)ZSH_AUTOSUGGEST_ACCEPT_WIDGETS:#forward-char}")
@@ -181,16 +122,7 @@ source "$HOME/.config/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
 # ZSH_AUTOSUGGEST_PARTIAL_ACCEPT_WIDGETS+=(forward-char)
 
 # shellcheck source=/dev/null
-# source "$HOME/.config/zsh/plugins/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 source "$HOME/.config/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 
 #=#############################################
 export PATH="$HOME/.local/bin:$PATH"
-# source /home/sweet/.config/broot/launcher/bash/br
-
-# export NVM_DIR="$HOME/.nvm"
-# [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-# [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-# export PYENV_ROOT="$HOME/.pyenv"
-# command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-# eval "$(pyenv init -)"

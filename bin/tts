@@ -1,0 +1,13 @@
+#!/data/data/com.termux/files/usr/bin/env bash
+
+function sigexit_capture() {
+    # NOTE: Termux API doesn't interrup in-progress termux-tts-speak. So, we kill it ourselves when the script is interrupted.
+    echo "Killing android TTS service."
+    am stopservice 'com.termux.api/.TextToSpeechAPI$TextToSpeechService' > /dev/null
+}
+
+trap sigexit_capture EXIT
+
+text="${@}"
+
+termux-tts-speak -n IN -r "${rate:-1.25}" "${text}"

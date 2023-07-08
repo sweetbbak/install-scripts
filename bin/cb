@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [ ! -t 0 ]; then
+	text="$(cat /dev/stdin)"
+	termux-clipboard-set "${text}" 
+	exit 0
+else
+	case "$1" in
+		p|paste|-p) termux-clipboard-get ;;
+		c|copy|-c) shift && termux-clipboard-set "${@}" ;;
+	esac
+fi
