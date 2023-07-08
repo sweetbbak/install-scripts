@@ -20,6 +20,7 @@ green='\e[38;5;2m'
 na='\e[0m'
 
 mkdir -p ~/.config/zsh
+mkdir -p ~/.config/zsh/plugins
 mkdir -p ~/github
 
 termux-change-repo
@@ -40,8 +41,8 @@ cd ~/.termux && wget https://github.com/subframe7536/maple-font/releases/downloa
 cd || exit
 
 # change default shell to ZSH
-user="$(id -u --name)"
-chsh -s zsh "${user}" >/dev/null
+# user="$(id -u --name)"
+# chsh -s zsh "${user}" >/dev/null
 
 apt_installs=(
     nala
@@ -58,6 +59,7 @@ apt_installs=(
     jq
     htop
     python
+    fd
     python-cryptography
     root-repo
     tsu
