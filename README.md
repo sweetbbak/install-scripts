@@ -20,6 +20,8 @@
 - Smart Auto-suggestions based on history (ghost text) press left or right arrow to complete/insert the text into the commandline
   (inputting w and hitting the UP arrow will match all commands in history that start with a W first)
 
+- ZSH syntax highlighting. Great to know if you made a small mistake while using one-liners on the command line.
+
 - Auto cd - just type a directory name to cd into it.
 - Ctrl + backspace -delete the entire word
 - Ctrl+left/right to jump one word left or right
@@ -36,6 +38,7 @@
 ![](assets/cmd2.png)
 
 ![](assets/cmd3.png)
+note that only _valid_ directories are underlined - helpful to know if what you are working on actually exists
 
 ![](assets/cmd4.png)
 
