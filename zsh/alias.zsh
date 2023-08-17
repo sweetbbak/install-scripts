@@ -1,14 +1,13 @@
 #-----------[Alias]---------------------#
-alias hx="hx"
-alias hx.="hx ."
+alias hx="helix"
+alias hx.="helix ."
 alias ff="firefox"
 alias zz="zathura"
 alias nsxiv="nsxiv -a"
 alias v='nvim'
 alias nv='nvim'
 alias cat='bat'
-alias rn="ranger"
-
+alias gsw='gamescope -W 1080 -H 1920 wine'
 # Core utils + replacements
 alias ls="exa --icons"
 alias ll='exa -Fal'
@@ -29,40 +28,56 @@ alias cxx='chmod +x "$(rg --files -g "*.sh"|fzf -1 --height=20% --preview-window
 
 # Utility functions for Core utils
 alias srs="fd . $path | fzf --height=33% --preview='bat {}' | xargs bash -c"
+alias wget-pdf='wget -r -l 1 -nH -nd -np --ignore-case -A "*.pdf"'
 
 alias ag="alias | grep "
-alias hg="history 1 | grep"
 alias zrc="hx ~/.zshrc && source ~/.zshrc"
 alias z='zoxide'
 
 alias ..="cd .."
 alias ...='cd ../..'
 alias ....='cd ../../..'
+alias j.='cd -'
 
+alias hg="history 1 | grep"
 alias pwz='sudo !!'
 alias chx="chmod +x"
-alias tsm="transmission-remote"
-alias gcl='git clone'
-
 alias fix-perms-dirs="find /home/sweet/bin -type d -exec chmod 774 {} +"
 alias fix-perms-files="find /home/sweet/bin -type f -exec chmod 664 {} +"
 
+# Git
+alias gcl='git clone'
+alias tsm="transmission-remote"
+
+# OCR
+# alias ocr='scrot -s -o -f '/any/path/OCR.png' -e 'tesseract -l jpn $f stdout | xclip -selection clipboard && rm $f''
+
 # fzf
-alias fsh='fc -l -n -r 1 | sed -Ee "s/^[[:blank:]]+//" | uniq | fzf | tr -d \\n | xclip -selection c'
+alias fsh='fc -l -n -r 1 | sed -Ee "s/^[[:blank:]]+//" | uniq | fzf | tr -d \\n | wl-copy'
 alias config='git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
+# alias fzf-preview='printf "fzf --with-nth 2.. --cycle --preview=\"kitty +kitten icat --clear --transfer-mode file;\
+#   kitty +kitten icat --place "190x12@10x10" --scale-up --transfer-mode file {1}\""|xsel'
 
 # Internet
 alias wget-links='wget -U "Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0" --no-check-certificate "$1" -q -O - | grep -Po "(?<=href=\")[^^\"]*"'
 alias wget-images='wget -U "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:49.0) Gecko/20100101 Firefox/49.0" -nd -r --level=1  -e robots=off -A jpg,jpeg -H "$1"'
 
 # Etc.
-alias vg='hx $(gum filter)'
-
+# alias fzr='\ls -vR ~/bin | fzf --reverse --bind "enter:execute({})+accept"'
+# alias anifzf='alacritty --class "kitty-fzf" -e bash -c "ani-cli"'
+# alias pass-to-fzf='alacritty --class "kitty-fzf" -e bash -c "fzf $* < /proc/$$/fd/0 > /proc/$$/fd/1"'
+alias hxx='hx $(gum filter)'
 # Locations
-alias down="cd ~/storage/Downloads"
-alias pics="cd ~/storage/Pictures"
-alias vids="cd ~/storage/Videos"
-alias docs="cd ~/storage/Documents"
+alias t7='cd /run/media/sweet/T7'
+# alias drives='cd /run/media/sweet'
+alias ssd='cd ~/ssd'
+alias vmshare='cd ~/ssd/vmshare'
+alias hdd='cd ~/hdd'
+alias hd2='cd ~/hd2'
+alias down="cd ~/Downloads"
+alias pics="cd ~/Pictures"
+alias vids="cd ~/Videos"
+alias docs="cd ~/Documents"
 
 #Pacman
 alias pac="sudo pacman"
@@ -78,22 +93,32 @@ alias pacc="pacman -Slq | fzf --preview 'pacman -Si {}' --layout=reverse"
 
 #handy shit
 alias eip='echo $(curl -s http://ifconfig.me)'
-alias px2ansi='python ~/github/px2ansi/px2ansi.py'
 alias icat="kitty +kitten icat"
 alias zshxc="zsh -ixc : 2>&1 | grep"
 alias fzman="echo '' | fzf --preview 'man {q}'"
-# alias fzawk='echo "" | fzf --print-query --preview 'echo "a\nb\nc\nd" | awk {q}''
+alias fzawk='echo "" | fzf --print-query --preview 'echo "a\nb\nc\nd" | awk {q}''
+# alias px2ansi='python ~/github/px2ansi/px2ansi.py'
 
 # Programs
-alias top="htop"
+alias top="btop"
+alias lsall='find ./ -printf "%f\n"'
 alias py='python'
+# alias n='nnn -de'
 alias share='printf $(curl -# "https://oshi.at" -F "f=@$(fd -t f -d 1|fzf)"|sed -nE "s_DL: (.*)_\1_p")|xsel' #share file to file share site
+alias ximg='xclip -selection clipboard -target image/png -i'
+alias xout='xclip -se c -t image/png -o >'
 alias fmpv='mpv "$(fzf)"'
 
 # Yt-dlp
 alias ytdl='yt-dlp --embed-thumbnail'
 alias yta="yt-dlp --embed-thumbnail --embed-metadata -x"
+alias ytd="yt-dlp --embed-thumbnail --embed-metadata -x -o './%(title)s-%(id)s.%(ext)s'"
+# alias ytd="yt-dlp -f 'bestvideo[height<=?1080]+bestaudio/best' -f 'mp4'"
+# alias ytdd="yt-dlp -f 'bestvideo[height<=?720]+bestaudio/best' -f 'mp4'"
+# alias ytddd="yt-dlp -f 'bestvideo[height<=?480]+bestaudio/best' -f 'mp4'"
 alias download="yt-dlp -x --audio-format --embed-thumbnail --embed-metadata mp3"
+
+# Media
 
 # System
 alias psa="ps -e | grep -i"
@@ -104,6 +129,10 @@ alias parts="lsblk --output NAME,LABEL,FSTYPE,MOUNTPOINTS,SIZE,MODEL"
 
 alias fonts='fc-list --format="%{family[0]}\n" | sort|uniq| fzf'
 alias paths='sed "s/:/\n/g" <<< $PATH'
+# alias finddir="find . -type d -name"
+# alias findfile="find . -type f -name"
+
+# alias fff="fd -d 2 | fzf --preview 'bat --color=always --style=numbers {}'"
 
 # Kitty
 alias pix="pixcat resize -w 64 -h 32 -W 512 -H 256 --align center --relative-x -2"
@@ -111,6 +140,8 @@ alias kittydiff="git difftool --no-symlinks --dir-diff"
 
 # Curl
 alias curluser='curl -A "Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0"'
+# alias fzls="find . -maxdepth 1 2> /dev/null |sort -h | sed '1d; s|^\./||' | fzf"
+# alias fzliss="fd . | fzf --preview 'bat --color=always --style=numbers {}'"
 
 # nvim stuff
 alias nvff="open_with_nvim_filetype nvim"

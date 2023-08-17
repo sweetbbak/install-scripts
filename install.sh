@@ -123,6 +123,9 @@ install_zsh() {
     mkdir -p "$HOME/.config/zsh"
     mkdir -p "$HOME/.config/zsh/plugins"
 
+    # copy custom files into zsh configuration directory
+    [ -d ./zsh ] && cp ./zsh/* "$HOME/.config/zsh"
+
     # download the best plugins known to man
     log "Downloading Fzf-tab completion" ; [ ! -d "$HOME/.config/zsh/plugins/fzf-tab" ] && \
     git clone https://github.com/Aloxaf/fzf-tab "$HOME/.config/zsh/plugins/fzf-tab"

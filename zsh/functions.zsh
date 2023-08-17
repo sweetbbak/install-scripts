@@ -1,5 +1,38 @@
 ## some handy functions I've written or collected
 
+# copy the full path of a file
+rp() {
+    case "$1" in
+        -h|--help) echo "rp <file> - copies files full path" ;;
+        *) realpath "${1}" | wl-copy && echo "copied filepath" ;;
+    esac
+}
+
+# termcap
+# ks       make the keypad send commands
+# ke       make the keypad send digits
+# vb       emit visual bell
+# mb       start blink
+# md       start bold
+# me       turn off bold, blink and underline
+# so       start standout (reverse video)
+# se       stop standout
+# us       start underline
+# ue       stop underline
+
+function man() {
+	env \
+		LESS_TERMCAP_md=$(tput bold; tput setaf 3) \
+		LESS_TERMCAP_me=$(tput sgr0; tput setaf 3) \
+		LESS_TERMCAP_mb=$(tput blink; tput setaf 3) \
+		LESS_TERMCAP_us=$(tput setaf 3) \
+		LESS_TERMCAP_ue=$(tput sgr0; tput setaf 3) \
+		LESS_TERMCAP_so=$(tput smso; tput setaf 3) \
+		LESS_TERMCAP_se=$(tput rmso; tput setaf 3) \
+		PAGER="${MANPAGER:-$PAGER}" \
+		man "$@"
+}
+
 function fzcd() {
     dir="$(fd -d1 -td | fzf --preview='exa {}')"
     dir=$(realpath "$dir")

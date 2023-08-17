@@ -1,37 +1,53 @@
-export EDITOR='hx'
+export EDITOR='helix'
 export SHELL=/bin/bash
-
 export HISTFILE=~/.zsh_history
 export HISTSIZE=100000
 export SAVEHIST=100000
 export HISTDUP=erase
-
-# export MANPAGER="sh -c 'sed -e s/.\\\\x08//g | bat -p -l man'"
-export PAGER='bat --color=always'
+export VISUAL='kitty helix'
+export MANPAGER="bat -p -l help"
+# export MANPAGER="sh -c 'sed -e s/.\\\\x08//g | bat --color=always -p -l man'"
+# export PAGER='bat --color=always'
+# export MANPAGER='bat --color=always --plain'
 export DIFFPROG="nvim -d"
+export DOTBARE_DIR="$HOME/.dotfiles"
+export DOTBARE_TREE="$HOME"
+export DOTBARE_PREVIEW="bat -n {}"
+export DOTBARE_BACKUP="/home/sweet/hdd/dots-backup"
 
-# LESS_TERMCAP_md=$'\E[01;31m' LESS_TERMCAP_me=$'\E[0m' GROFF_NO_SGR=1
-# LESS_TERMCAP_se=$'\E[0m' LESS_TERMCAP_so=$'\E[01;32m'
-# LESS_TERMCAP_us=$'\E[04;33m' LESS_TERMCAP_ue=$'\E[0m'
+alias tts1="piper-tts --model ~/ssd/model_1/model.onnx --output_raw | aplay -r 22050 -c 1 -f S16_LE -t raw"
+alias tts="piper-tts --model ~/ssd/amy/amy.onnx --output_raw | aplay -r 22050 -c 1 -f S16_LE -t raw"
+
+# --- Pywal ---
+# shellcheck source=/dev/null
+test -f "$HOME/.cache/okolors/colors.sh" && source "$HOME/.cache/okolors/colors.sh"
+# source "$HOME/.cache/wal/colors.sh"
 
 # --- fzf tab ---
 # shellcheck source=/dev/null
-source "$HOME/github/fzf-tab/fzf-tab.plugin.zsh"
+# source "$HOME/github/fzf-tab/fzf-tab.plugin.zsh"
+source "$HOME/.config/zsh/plugins/fzf-tab/fzf-tab.plugin.zsh"
 
 # shellcheck source=/dev/null
 source "$HOME/.config/zsh/plugins/fzf-history/zsh-fzf-history-search.zsh"
 zstyle ':autocomplete:*' default-context history-incremental-search-backward
 
+# shellcheck source=/dev/null
+source ~/.config/zsh/plugins/fzf-tab-source/*.zsh
+
 # Starship
-# export STARSHIP_CONFIG=~/.config/starship/starship.toml
 export STARSHIP_CONFIG=~/.config/starship/starship.toml
-eval "$(starship init zsh)"
+if command -v starship >/dev/null; then
+  eval "$(starship init zsh)"
+else
+  echo -e "\e[33;3mStarship is not installed\e[0m"
+fi
 
 # --- Keys ---
 bindkey '^[[1;5C' forward-word     # ctrl + ->
 bindkey '^[[1;5D' backward-word    # ctrl + <-
 bindkey '^H' backward-kill-word    # ctrl+backspace delete word
-# bindkey ' ' magic-space
+bindkey ' ' magic-space
 
 # enable completion features
 autoload -Uz compinit
@@ -54,13 +70,11 @@ zstyle ':completion:*:descriptions' format '[%d]'
 # set list-colors to enable filename colorizing
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 # preview directory's content with exa when completing cd
-zstyle ':fzf-tab:complete:cd:*' fzf-preview "exa -1 --color=always $realpath"
+# zstyle ':fzf-tab:complete:cd:*' fzf-preview "exa -1 --color=always $realpath"
+# zstyle ':fzf-tab:complete:ls:*' fzf-preview "cat -p {}"
 # switch group using `,` and `.`
 zstyle ':fzf-tab:*' switch-group ',' '.'
 
-## tab sources
-# shellcheck source=/dev/null
-source ~/.config/zsh/plugins/fzf-tab-source/*.zsh
 
 # History configurations
 setopt autocd
@@ -80,8 +94,9 @@ autoload -U up-line-or-beginning-search
 autoload -U down-line-or-beginning-search
 zle -N up-line-or-beginning-search
 zle -N down-line-or-beginning-search
-bindkey "^[[A" up-line-or-beginning-search        # Up
-bindkey "^[[B" down-line-or-beginning-search      # Down
+bindkey "^[[A" up-line-or-beginning-search # Up
+bindkey "^[[B" down-line-or-beginning-search # Down
+
 bindkey ' ' magic-space                           # do history expansion on space
 bindkey '^U' backward-kill-line                   # ctrl + U
 bindkey '^[[3;5~' kill-word                       # ctrl + Supr
@@ -95,7 +110,9 @@ bindkey '^[[F' end-of-line                        # end
 bindkey '^[[Z' undo                               # shift + tab undo last action
 
 # Zoxide
-eval "$(zoxide init zsh)"
+if command -v zoxide >/dev/null; then
+  eval "$(zoxide init zsh)"
+fi
 
 # --- Sources ---
 # source aliases and personal scripts
@@ -106,12 +123,11 @@ source "$HOME/.config/zsh/functions.zsh"
 # shellcheck source=/dev/null
 source "$HOME/.config/zsh/fzf.zsh"
 # shellcheck source=/dev/null
-# source "$HOME/.config/zsh/plugins/xport.zsh"
-# shellcheck source=/dev/null
-source "$HOME/.config/zsh/plugins/colored-man.zsh"
+# source ~/.config/zsh/plugins/colored-man.zsh
 # shellcheck source=/dev/null
 source "$HOME/.config/zsh/zplugs/dirhistory/dirhistory.plugin.zsh"
-# source auto suggestions and syntax highlighting (syntax needs to be last)
+
+# source auto suggestions
 # shellcheck source=/dev/null
 source "$HOME/.config/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
 
@@ -122,7 +138,5 @@ source "$HOME/.config/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
 # ZSH_AUTOSUGGEST_PARTIAL_ACCEPT_WIDGETS+=(forward-char)
 
 # shellcheck source=/dev/null
+# must be loaded last
 source "$HOME/.config/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
-
-#=#############################################
-export PATH="$HOME/.local/bin:$PATH"
