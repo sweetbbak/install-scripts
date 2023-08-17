@@ -113,7 +113,7 @@ install_extras() {
 install_zsh() {
     # back up zsh dir if it exists and make our own
     [ -d "$HOME/.config/zsh" ] && log "[ $HOME/.config/zsh ] already exists" && \
-    read -r yes
+    read -r -p "backup zsh folder and reinstall: (y|n) " yes
     case "$yes" in 
         y) mv "$HOME/.config/zsh" "$HOME/.config/zsh.bak" ;;
         n) echo -e "exiting" ; return 1 ;;
@@ -146,7 +146,20 @@ install_zsh() {
     git clone https://github.com/Freed-Wu/fzf-tab-source.git "$HOME/.config/zsh/plugins/fzf-tab-source" || \
     log "this directory already exists, delete and re-run if there are any issues"
 
+    # Install ZSHRC file
+    if [ "$zsh_config" = 1 ]; then
+        [ -f "$HOME/.zshrc" ] && log "[ $HOME/.zshrc ] exists... backing up" \
+            && mv "$HOME/.zshrc" "$HOME/.zshrc.bak"
+        cp ./.zshrc "$HOME/.zshrc" && log "successfully installed .zshenv file"
+    fi
 
+    # Install ZSHENV file for adding things to $PATH
+    [ -f "$HOME/.zshenv" ] && log "[ $HOME/.zshenv ] exists... backing up" \
+        && mv "$HOME/.zshenv" "$HOME/.zshenv.bak"
+    cp ./.zshenv "$HOME/.zshenv" && log "successfully installed .zshenv file"
+}
+
+cp_configs() {
     [ -d "$HOME/.config/helix" ] && log "[ $HOME/.config/helix ] exists" 
     [ ! -d "$HOME/.config/helix" ] && cp ./helix ~/.config
 
@@ -164,18 +177,6 @@ install_zsh() {
 
     [ -d "$HOME/scripts" ] && log "[ $HOME/.config/scripts ] exists"
     [ ! -d "$HOME/scripts" ] && cp ./scripts "$HOME"
-
-    # Install ZSHRC file
-    if [ "$zsh_config" = 1 ]; then
-        [ -f "$HOME/.zshrc" ] && log "[ $HOME/.zshrc ] exists... backing up" \
-            && mv "$HOME/.zshrc" "$HOME/.zshrc.bak"
-        cp ./.zshrc "$HOME/.zshrc" && log "successfully installed .zshenv file"
-    fi
-
-    # Install ZSHENV file for adding things to $PATH
-    [ -f "$HOME/.zshenv" ] && log "[ $HOME/.zshenv ] exists... backing up" \
-        && mv "$HOME/.zshenv" "$HOME/.zshenv.bak"
-    cp ./.zshenv "$HOME/.zshenv" && log "successfully installed .zshenv file"
 }
 
 install_okolors() {
@@ -244,6 +245,7 @@ print_help() {
     echo -e "${0##*/} <options>"
     echo -e "\t--mpv\tinstall custom mpv that allows you to watch videos in a kitty terminal"
     echo -e "\t--zsh\tinstall a beautiful zsh configuration"
+    echo -e "\t--config\tbackup and install my configuration files"
     echo -e "\t--candy\tadd pacman animation on arch based distros"
     echo -e "\t--all\tinstall it all"
 }
@@ -256,6 +258,7 @@ while [ $# -gt 0 ]; do
     case "$1" in
         --mpv) install_mpv ;;
         --zsh) install_zsh ;;
+        --config) cp_configs ;;
         --candy) add_pacman_eye_candy ;;
         --all) install_zsh ; install_paru ; install_base ; install_extras;;
         -h|--help) print_help ;;
