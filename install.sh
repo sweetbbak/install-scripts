@@ -114,6 +114,7 @@ install_zsh() {
     # back up zsh dir if it exists and make our own
     [ -d "$HOME/.config/zsh" ] && log "[ $HOME/.config/zsh ] already exists" && \
     read -r -p "backup zsh folder and reinstall: (y|n) " yes
+
     case "$yes" in 
         y) mv "$HOME/.config/zsh" "$HOME/.config/zsh.bak" ;;
         n) echo -e "exiting" ; return 1 ;;
