@@ -1,5 +1,54 @@
 # Sweet's terminal necessities
 
+### Starship config
+
+![](assets/terminal.png)
+Cofiguration for "prompt" using Starship
+
+---
+
+## Examples
+
+![](assets/cmd_complete.png)
+Auto search your path for binaries, executables, funcions and shell-builtins.
+
+---
+
+![](assets/cmd2.png)
+_smart_ auto completion for most commands that provide completion scripts. In this example
+with pgrep, auto completion shows running processes. "ls" will show directories etc...
+
+---
+
+![](assets/cmd3.png)
+note that only _valid_ directories are underlined - helpful to know if what you are working on actually exists
+
+---
+
+![](assets/cmd4.png)
+Syntax highlighting for small one-liners on the command line. Any errors will be highlighted.
+
+---
+
+![](assets/cmd5.png)
+Command flag completion!
+
+---
+
+![](assets/cmd7.png)
+auto-suggestions based on history. It will match the letters you have already typed first.
+typing "w" and hitting the UP or DOWN arrow will match all commands in history that start with that letter
+
+---
+
+![](assets/cmd8.png)
+Hit CTRL+R for a more comprehensive fzf list of your zsh history!
+
+---
+
+![](assets/cmd6.png)
+colored output using exa. Makes it far easier to see what you are working with. eza is also a good option.
+
 ## Features
 
 - Smart tab completion using fzf and sane defaults.
@@ -26,36 +75,3 @@
 - Ctrl + backspace -delete the entire word
 - Ctrl+left/right to jump one word left or right
 - Ctrl+r to reverse history search using FZF
-
-### Starship config
-
-![](assets/terminal.png)
-Cofiguration for "prompt" using Starship
-
-## Examples
-
-![](assets/cmd_complete.png)
-Auto search your path for binaries, executables, funcions and shell-builtins.
-
-![](assets/cmd2.png)
-_smart_ auto completion for most commands that provide completion scripts. In this example
-with pgrep, auto completion shows running processes. "ls" will show directories etc...
-
-![](assets/cmd3.png)
-note that only _valid_ directories are underlined - helpful to know if what you are working on actually exists
-
-![](assets/cmd4.png)
-Syntax highlighting for small one-liners on the command line. Any errors will be highlighted.
-
-![](assets/cmd5.png)
-Command flag completion!
-
-![](assets/cmd7.png)
-auto-suggestions based on history. It will match the letters you have already typed first.
-typing "w" and hitting the UP or DOWN arrow will match all commands in history that start with that letter
-
-![](assets/cmd8.png)
-Hit CTRL+R for a more comprehensive fzf list of your zsh history!
-
-![](assets/cmd6.png)
-colored output using exa. Makes it far easier to see what you are working with. eza is also a good option.
