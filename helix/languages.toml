@@ -17,6 +17,11 @@ indent = { tab-width = 4, unit = "    " }
 # config = { pylsp.plugins.flake8.enabled = false }
 
 [[language]]
+name = "yaml"
+auto-format = true
+# language-server = {command = "yaml-language-server"}
+
+[[language]]
 name = "rust"
 scope = "source.rust"
 injection-regex = "rust"
@@ -99,10 +104,40 @@ indent = { tab-width = 4, unit = " " }
 [[language]]
 name = "python"
 roots = ["pyproject.toml", "setup.py", "Poetry.lock", ".git"]
-language-server = { command = "pyright-langserver", args = ["--stdio"] }
+# language-server = { command = "pyright-langserver", args = ["--stdio"] }
+language-server = { command = "/home/sweet/.local/share/nvim/mason/bin/pylsp" }
 auto-format = true
 formatter = {command = 'black', args = ["--quiet", "-"]}
 config = ""
+
+# [language.formatter]
+# command = "black"
+# args = [
+# "-", # stdin
+# "--quiet",
+# "--line-length=90",
+# ]
+
+# pylsp = { command = "pylsp" }
+
+# [[language]]
+# name = "python"
+# scope = "source.python"
+# injection-regex = "python"
+# file-types = ["py","pyi","py3","pyw","ptl",".pythonstartup",".pythonrc","SConstruct"]
+# shebangs = ["python"]
+# roots = []
+# comment-token = "#"
+# auto-format = true
+# language-server = { command = "pyright-langserver", args = ["--stdio"] }
+# # language-servers = { command = ["pylsp"] }
+# # language-server = { command = "pylsp" }
+# # TODO: pyls needs utf-8 offsets
+# indent = { tab-width = 4, unit = "    " }
+
+# [[grammar]]
+# name = "python"
+# source = { git = "https://github.com/tree-sitter/tree-sitter-python", rev = "de221eccf9a221f5b85474a553474a69b4b5784d" }
 
 # [language.formatter]
 # command = "black"

@@ -1,25 +1,12 @@
-scan_timeout = 10
-command_timeout = 10000
-# format = "$directory$git_branch$git_metrics$character"
-# add_newline = false
-# line_break.disabled = true
-# directory.style = "purple"
-
-# [character]
-# success_symbol = "[](purple)"
-# error_symbol = "[](blue)"
-
-# [git_branch]
-# style = "pink"
-# symbol = ""
-
-# [git_metrics]
-# disabled = true
-# added_style = "bold green"
-# deleted_style = "bold red"
 ## ░█▀▀░▀█▀░█▀█░█▀▄░█▀▀░█░█░▀█▀░█▀█
 ## ░▀▀█░░█░░█▀█░█▀▄░▀▀█░█▀█░░█░░█▀▀
 ## ░▀▀▀░░▀░░▀░▀░▀░▀░▀▀▀░▀░▀░▀▀▀░▀░░
+
+# Sweet's starship config
+
+scan_timeout = 10
+command_timeout = 10000
+
 # Setups
 format="$directory$git_branch$character"
 right_format = """$git_status$cmd_duration"""
@@ -44,14 +31,11 @@ format = ' [$symbol$environment](dimmed green) '
 
 # Prompt symbols 
 [character]
-# success_symbol = "[](#8EC07C bold)"
 success_symbol = "[](#008787 bold)"
-# error_symbol = "[](#AD685A)"
 error_symbol = "[](#F783D0)"
 vicmd_symbol = "[](#DD8F6E)"
 
 [directory]
-# format = "[]($style)[ ](bg:#312C2E fg:#DD8F6E)[$path](bg:#312C2E fg:#83A598 bold)[ ]($style)"
 format = "[]($style)[ ](bg:#312C2E fg:#875FFF)[$path](bg:#312C2E fg:#F783D0 bold)[ ]($style)"
 style = "bg:none fg:#312C2E"
 truncation_length = 3
@@ -62,7 +46,6 @@ format = "[]($style)[[ ](bg:#312C2E fg:#8EC07C bold)$branch](bg:#312C2E fg
 style = "bg:none fg:#312C2E"
 
 [git_status]
-# $all status$ahead_behind
 format = "[]($style)[$all_status$ahead_behind](bg:#312C2E fg:#b4befe)[ ]($style)"
 style = "bg:none fg:#312C2E"
 conflicted = "="
@@ -79,8 +62,6 @@ deleted = "${count}"
 
 [cmd_duration]
 min_time = 1
-# duration & style 
-# format = "[]($style)[[神](bg:#312C2E fg:#eba0ac bold)$duration](bg:#312C2E fg:#BBC3DF)[ ]($style)"
-format = "[]($style)[[神](bg:#312C2E fg:#F783D0 bold)$duration](bg:#312C2E fg:#BBC3DF)[ ]($style)"
+format = "[]($style)[[](bg:#312C2E fg:#F783D0 bold)$duration](bg:#312C2E fg:#BBC3DF)[ ]($style)"
 disabled = false
 style = "bg:none fg:#312C2E"

@@ -1,0 +1,8 @@
+starship
+exa
+bat
+ranger
+helix
+bash-language-server
+shellcheck
+zoxide

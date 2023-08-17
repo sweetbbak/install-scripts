@@ -6,13 +6,13 @@ export HISTSIZE=100000
 export SAVEHIST=100000
 export HISTDUP=erase
 
-export MANPAGER="sh -c 'sed -e s/.\\\\x08//g | bat -p -l man'"
+# export MANPAGER="sh -c 'sed -e s/.\\\\x08//g | bat -p -l man'"
 export PAGER='bat --color=always'
 export DIFFPROG="nvim -d"
 
-LESS_TERMCAP_md=$'\E[01;31m' LESS_TERMCAP_me=$'\E[0m' GROFF_NO_SGR=1
-LESS_TERMCAP_se=$'\E[0m' LESS_TERMCAP_so=$'\E[01;32m'
-LESS_TERMCAP_us=$'\E[04;33m' LESS_TERMCAP_ue=$'\E[0m'
+# LESS_TERMCAP_md=$'\E[01;31m' LESS_TERMCAP_me=$'\E[0m' GROFF_NO_SGR=1
+# LESS_TERMCAP_se=$'\E[0m' LESS_TERMCAP_so=$'\E[01;32m'
+# LESS_TERMCAP_us=$'\E[04;33m' LESS_TERMCAP_ue=$'\E[0m'
 
 # --- fzf tab ---
 # shellcheck source=/dev/null
