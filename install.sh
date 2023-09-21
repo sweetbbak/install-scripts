@@ -7,7 +7,7 @@
 # 1 = true
 
 # backup and replace .zshrc and .zshenv (set to 1 - recommended for first time installation)
-zsh_config=0
+zsh_config=1
 # pywal but better, highly recommend it for theming
 # change this to 1 to install this binary to ~/bin
 install_okolors=0
