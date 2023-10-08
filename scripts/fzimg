@@ -1,0 +1,30 @@
+#!/bin/bash
+
+print_help() {
+cat <<WAYLAND
+Add these window rules for Hyprland
+# Swayimg
+windowrulev2 = noblur, class:^(swayimg.*)$, title:^(swayimg.*)$,
+windowrulev2 = noborder, class:^(swayimg.*)$, title:^(swayimg.*)$,
+windowrulev2 = noshadow, class:^(swayimg.*)$, title:^(swayimg.*)$,
+windowrulev2 = opacity 1.0, class:^(swayimg.*)$, title:^(swayimg.*)$,
+windowrulev2 = opaque, class:^(swayimg.*)$, title:^(swayimg.*)$,
+windowrulev2 = nofocus, class:^(swayimg.*)$, title:^(swayimg.*)$,
+WAYLAND
+}
+
+run_cmd() {
+    fd . "${1:-$HOME/Pictures}" -tf -e png -e gif -e webp -e jpg |\
+    fzf --reverse --cycle \
+            --preview='(pkill swayimg) ; swayimg --class=floatimg {}'
+}
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -h|--help) print_help && exit 0 ;;
+        *) ;;
+    esac
+    shift
+done
+
+run_cmd "$@"

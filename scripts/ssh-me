@@ -1,0 +1,20 @@
+#!/bin/bash
+
+laptop=sweet@192.168.0.191
+server=sweet@192.168.0.217
+steamd=deck@192.168.0.125
+
+options=(
+	laptop
+	server
+	steamdeck
+)
+
+opts="$(gum choose "${options[@]}")"
+
+case "$opts" in
+	laptop) ssh "$laptop" ;;
+	server) ssh "$server" ;;
+	steam*) ssh "$steamd" ;;
+esac
+

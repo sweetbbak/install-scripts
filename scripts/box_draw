@@ -1,0 +1,69 @@
+#!/bin/bash
+
+draw_box() {
+tput clear
+
+horiz="$((COLUMNS - 2))"
+prompt_lines="$(wc -l <<< "${PS1@P}")"
+vert="$((LINES - prompt_lines - 1 ))"
+mid="$(perl -E "print '─' x $horiz")"
+itera=1
+
+printf '%s' '╭' $mid '╮'
+for ((itera=1; itera<vert; itera++)); do
+    printf '%s' "│" "${mid//─/ }" "│"
+done
+printf '%s' '╰' $mid '╯'
+}
+
+rounded_box() {
+    local u_left u_right b_left b_right h_bar v_bar h_width title content
+    u_left="\xe2\x95\xad"
+    u_right="\xe2\x95\xae"
+    b_left="\xe2\x95\xb0"
+    b_right="\xe2\x95\xaf"
+    h_bar="\xe2\x94\x80"
+    v_bar="\xe2\x94\x82"
+    h_width="78"
+
+    while getopts ":ht:w:" flags; do
+        case "${flags}" in
+            (h)
+                printf -- '%s\n' "rounded_box ([header]) [content]" >&2
+                return 0
+            ;;
+            (t) title="${OPTARG}" ;;
+            (w) h_width="$(( OPTARG - 2 ))" ;;
+            (*) : ;;
+        esac
+    done
+    shift "$(( OPTIND - 1 ))"
+
+    : title: "${title}", h_width: "${h_width}"
+    content="${*}"
+
+    # Print our header
+    printf -- '%b' "${u_left}${h_bar}"
+    printf -- '%s' "${title}"
+    title_width=$(( h_width - ${#title} ))
+    for (( i=0; i<title_width; i++)); do
+        printf -- '%b' "${h_bar}"
+    done
+    printf -- '%b\n' "${h_bar}${u_right}"
+
+    # Print our content
+    while read -r; do
+        printf -- '%b %s' "${v_bar}" "${REPLY}"
+        printf -- '%*s' "$(( h_width - ${#REPLY} ))"
+        printf -- ' %b\n' "${v_bar}"
+    done < <(fold -s -w "${h_width}" <<< ${content})
+
+    # Print our tail
+    printf -- '%b' "${b_left}${h_bar}"
+    for (( i=0; i<h_width; i++)); do
+        printf -- '%b' "${h_bar}"
+    done
+    printf -- '%b\n' "${h_bar}${b_right}"
+}
+
+rounded_box "${@}"

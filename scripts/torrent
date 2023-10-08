@@ -1,0 +1,33 @@
+#!/bin/bash
+
+case "$1" in
+    daemon|start|run)
+        transmission-daemon --download-dir "/home/sweet/ssd/torrents"
+        (transmission-daemon) &
+        ;;
+    add)
+        # takes url or magnet link
+        transmission-remote -a "$2"
+        ;;
+    list)
+        # status
+        transmission-remote -l
+        ;;
+    stop)
+        # status
+        transmission-remote -S -t "$2"
+        ;;
+    remove|rm|delete)
+        # remove by ID can pass multiple transmission-remote -t 3,4 -r or "all"
+        transmission-remote -t "${2}" -r
+        ;;
+    *)
+    printf "%s\n" "
+        ${0##*/} [start|add|list|remove] <args>
+            ${0##*/} start
+            ${0##*/} add <url>
+            ${0##*/} stop <id>
+            ${0##*/} remove <id>
+    "
+    ;;
+esac

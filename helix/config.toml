@@ -1,4 +1,6 @@
-theme = "monokai_pro"
+theme = "ferra"
+# theme = "rose_pine_moon"
+# theme = "monokai_pro"
 # theme = "gruvbox_original_dark_medium"
 
 # General Helix's configuration
@@ -37,6 +39,7 @@ esc = ["collapse_selection", "keep_primary_selection"]
 "C-s" = [":w"]
 "C-e" = ["save_selection"]
 "C-o" = [":open ~/.config/helix/config.toml"]
+"C-i" = [":insert-output echo -e 'if err != nil {\n\tfmt.Println(err)\n}'"]
 
 V = ["goto_first_nonwhitespace", "extend_to_line_end"]
 # D = ["ensure_selections_forward", "extend_to_line_end"]

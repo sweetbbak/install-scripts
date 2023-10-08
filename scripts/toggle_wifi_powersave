@@ -1,0 +1,6 @@
+case "$1" in
+    on)
+        sudo iw dev wlan0 set power_save on ;;
+    *)
+        sudo iw dev wlan0 set power_save off ;;
+esac

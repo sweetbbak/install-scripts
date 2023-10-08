@@ -1,0 +1,30 @@
+#!/bin/bash
+
+case "$1" in
+    -s|--sign*) re='^[+-]?[0-9]+([.][0-9]+)?$' ;;
+    -f|--float)  re='^[+-]?[0-9]+([.][0-9]+)?$' ;;
+    -n|-i|--int) re='^[0-9]+$' ;;
+    ?[0-9]?*) re='^[+-]?[0-9]+([.][0-9]+)?$' ;;
+esac
+
+# re='^[0-9]+$'
+if ! [[ $1 =~ $re ]] ; then
+   echo "error: Not a number" >&2; exit 1
+fi
+
+
+# One approach is to use a regular expression, like so:
+
+# re='^[0-9]+$'
+# if ! [[ $yournumber =~ $re ]] ; then
+#    echo "error: Not a number" >&2; exit 1
+# fi
+
+# If the value is not necessarily an integer, consider amending the regex appropriately; for instance:
+
+# ^[0-9]+([.][0-9]+)?$
+
+# ...or, to handle numbers with a sign:
+
+# ^[+-]?[0-9]+([.][0-9]+)?$
+

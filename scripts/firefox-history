@@ -1,0 +1,95 @@
+#!/bin/bash
+# script to dump and sort through browser history
+
+sort_urls() {
+     [ -n "${file}" ] && source "${file}"
+     grep -e 'reaperscans' \
+          -e 'asura' \
+          -e '.*manga.*' \
+          -e '.*webtoons.*' \
+          -e '.*rainofsnow.*' \
+          | grep -v -e '.*.jpg$' -e '.*google.*' -e '.*/#next/.*' \
+          | sort --numeric-sort \
+          | uniq -iu
+}
+
+cleanup() {
+     [ -d "${dbtmp}" ] && /usr/bin/rm -r "${dbtmp}"
+}
+
+trap cleanup EXIT
+
+usage() {
+     local green='\x1b[32m'
+     local bold='\x1b[1m'
+     local blue='\x1b[34m'
+     local yellow='\x1b[33m'
+     local reset='\x1b[0m'
+     binary="${0##*/}"
+
+     echo -e "${bold}Usage:${reset} ${binary}${green}${reset} [${yellow}-h${reset}|${yellow}--help${reset}] [${blue}${bold}install${reset}|${blue}${bold}restore-backup${reset}|${blue}${bold}eject${reset}]"
+     echo -e ""
+     echo -e "       ${bold}-h, --help${reset}       Show this help message"
+     echo -e ""
+     echo -e "       ${bold}-f, --fzf${reset}        Install or sync the dotfiles as symlinks in your home folder."
+     echo -e "       ${bold}-r, --rofi${reset}       Restore the backup of your dotfiles created by install."
+     echo -e "       ${bold}-w, --wofi${reset}       Replace the symlinks in your home folder with hard copies."
+     echo -e ""
+}
+
+main() {
+     dbtmp=$(mktemp -d)
+     db=$(find "${HOME}/.mozilla/firefox/" -name "places.sqlite")
+     [ -z "$db" ] && {
+          db=$(find "${HOME}/.var/app/org.mozilla.firefox/.mozilla/firefox" -name "places.sqlite") 
+     }
+
+     [ -z "$db" ] && echo "couldnt find places.sqlite... exiting" && exit
+
+     cp "${db}" "${dbtmp}"
+     db="${dbtmp}/places.sqlite"
+
+     # today_query="select p.url from moz_historyvisits as h, moz_places as p where substr(h.visit_date, 0, 11) >= strftime('%s', date('now')) and p.id == h.place_id order by h.visit_date;"
+     query="select p.url from moz_historyvisits as h, moz_places as p where p.id == h.place_id order by h.visit_date;"
+     todays_urls=$(sqlite3 "${db}" "${query}")
+
+     if [[ "$use_wofi" == "true" ]]; then
+          url=$(echo "${todays_urls}" | sort_urls | wofi --dmenu -i)
+     fi
+
+     if [[ "$use_rofi" == "true" ]]; then
+          url=$(echo "${todays_urls}" | sort_urls | rofi -dmenu -i)
+     fi
+
+     if [[ "$use_fzf" == "true" ]]; then
+          url=$(echo "${todays_urls}" | sort_urls | fzf --reverse --height=25% -m --cycle)
+     fi
+
+
+     if [[ "$new_win" == "true" ]]; then
+          [ -n "$url" ] && firefox --new-window "${url}"
+     else
+          [ -n "$url" ] && firefox "${url}"
+     fi
+
+     [ -d "${dbtmp}" ] && rm -r "${dbtmp}"
+}
+
+if [ $# -lt 1 ]; then
+     main
+     exit
+fi
+
+while [ $# -gt 0 ]; do
+     case "$1" in
+          -h|--help) usage ;;
+          -f|--fzf) use_fzf=true ;;
+          -w|--wofi) use_wofi=true ;;
+          -r|--rofi) use_rofi=true ;;
+          -n|--new-win*) new_win=true ;;
+          -u|--url) shift && file="${1}" ;;
+     esac
+shift
+done
+
+main

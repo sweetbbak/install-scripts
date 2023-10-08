@@ -1,0 +1,449 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 20202 Antonio Larrosa <alarrosa@suse.com>
+# This file is part of ttf-converter
+# <https://github.com/antlarr-suse/ttf-converter>.
+#
+# ttf-converter is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License.
+#
+# ttf-converter is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with dogtag.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+import fontforge
+import sys
+import os.path
+import argparse
+import math
+import psMat
+from glob import glob
+import subprocess
+import tempfile
+import gzip
+import unicodedata
+
+
+class SkipFont(Exception):
+    pass
+
+
+def fix_duplicated_unicode_points(font):
+    seen = {}
+    glyphs_to_remove = []
+    for idx, glyph in enumerate(font.glyphs()):
+        if glyph.unicode == -1:
+            continue
+        if glyph.unicode in seen:
+            prev_idx, prev_glyphname = seen[glyph.unicode]
+            print(f'Unicode point {hex(glyph.unicode)} '
+                  f'at position {idx} ({glyph.glyphname}) is duplicated at '
+                  f'position {prev_idx} ({prev_glyphname})')
+            glyphs_to_remove.append(glyph)
+
+        seen[glyph.unicode] = (idx, glyph.glyphname)
+
+    for glyph in glyphs_to_remove:
+        print(f'Removing glyph {glyph.glyphname} {hex(glyph.unicode)}')
+        font.removeGlyph(glyph)
+
+
+def fix_font(font):
+    good_em = 2 ** math.ceil(math.log(font.em, 2))
+    if font.em != good_em:
+        print(f'Setting font em size to {good_em} (was {font.em}): '
+              'TrueType needs em to be a power of 2')
+        font.em = good_em
+
+    state = font.validate()
+
+    if state & 0x400000:
+        print('Font has duplicated unicode points')
+        print(f'Font contains {len(list(font.glyphs()))} glyphs')
+        fix_duplicated_unicode_points(font)
+        state = font.validate(True)
+        print(f'Font now contains {len(list(font.glyphs()))} glyphs')
+
+    # All bitmask values at https://fontforge.org/docs/scripting/python/fontforge.html#fontforge.glyph.validation_state  # noqa
+    validate_mask = 1  # Glyph has been validated
+    validate_mask |= 0x4  # Glyph intersects itself somewhere
+    validate_mask |= 0x20  # Missing extrema points should be ignored if we already tried to add them  # noqa
+    validate_mask |= 0x800000  # Overlapped hints
+
+    for idx, glyph in enumerate(font.glyphs()):
+        glyph.validate()
+        if glyph.validation_state & 0x8:
+            print(f'Font glyph "{glyph.glyphname}" ({idx}) has at least one '
+                  'contour in wrong direction... ', end='')
+            glyph.correctDirection()
+            glyph.validate(True)
+            if glyph.validation_state & 0x8:
+                print('Error')
+                msg = (f'Font glyph "{glyph.glyphname}" ({idx}) '
+                       'doesn\'t validate: Contour in wrong direction')
+                raise ValueError(msg)
+            else:
+                print('Fixed')
+
+        if glyph.validation_state & 0x20:
+            print(f'Font glyph "{glyph.glyphname}" ({idx}) is missing '
+                  'extrema. Adding points... ', end='')
+            for mode in ('only_good_rm', 'all'):
+                glyph.addExtrema(mode)
+                glyph.validate(True)
+                if not glyph.validation_state & 0x20:
+                    break
+            else:
+                print('Error')
+                msg = (f'Font glyph "{glyph.glyphname}" ({idx}) '
+                       'doesn\'t validate: Missing extrema')
+                # raise ValueError(msg)
+            print('Fixed')
+
+        if glyph.validation_state & 0x80000:
+            print(f'Font glyph "{glyph.glyphname}" ({idx}) has non-integral '
+                  'points. Rounding... ', end='')
+            for factor in (1000, 100, 10, 1):
+                glyph.round(factor)
+                glyph.validate(True)
+                if not glyph.validation_state & 0x80000:
+                    break
+            else:
+                print('Error')
+                msg = (f'Font glyph "{glyph.glyphname}" ({idx}) '
+                       'doesn\'t validate: Points non-integral')
+                raise ValueError(msg)
+            print(f'Fixed (factor {factor})')
+
+        if glyph.validation_state & ~validate_mask:
+            msg = (f'Font glyph {idx} ({glyph.glyphname}) doesn\'t validate: '
+                   f'{hex(glyph.validation_state)}')
+            if glyph.validation_state == 0x3:
+                raise SkipFont('Bad glyf or loca table')
+            raise ValueError(msg)
+
+    return True
+
+
+def fix_subfamily(font, force_subfamily=None):
+    sfnt_names = list(font.sfnt_names)
+    subfamily_index = [x[1] for x in sfnt_names].index('SubFamily')
+    translations = {'BoldCond': 'Bold Condensed',
+                    'BoldCondItal': 'Bold Condensed Italic',
+                    'BoldItal': 'Bold Italic',
+                    'BoldItalic': 'Bold Italic',
+                    'BoldOblique': 'Bold Oblique',
+                    'BookObli': 'Book Oblique',
+                    'DemiObli': 'Demi Oblique',
+                    'DemiBold': 'Demi Bold',
+                    'DemiBoldItal': 'Demi Bold Italic',
+                    'DemiBoldItalic': 'Demi Bold Italic',
+                    'LighItal': 'Light Italic',
+                    'MediItal': 'Medium Italic',
+                    'MediumItalic': 'Medium Italic',
+                    'MediumOblique': 'Medium Oblique',
+                    'ReguCond': 'Regular Condensed',
+                    'ReguCondItal': 'Regular Condensed Italic',
+                    'ReguItal': 'Regular Italic',
+                    'ReguObli': 'Regular Oblique',
+                    'RegularItalic': 'Regular Italic',
+                    'StandardSymL': 'Regular'}
+    # The last one is for the Standard Symbols L font
+
+    if force_subfamily:
+        new_value = force_subfamily
+    else:
+        try:
+            new_value = translations[sfnt_names[subfamily_index][2]]
+        except KeyError:
+            # Nothing to fix
+            return
+
+    print(f'Fixing subfamily: Renaming {sfnt_names[subfamily_index][2]} '
+          f'to {new_value}.')
+    sfnt_names[subfamily_index] = (sfnt_names[subfamily_index][0:2] +
+                                   (new_value,))
+    font.sfnt_names = tuple(sfnt_names)
+
+
+def fix_monospaced_font(font):
+    glyphs = list(font.glyphs())
+    max_width = max(x.width for x in glyphs)
+    wrong_width_glyphs = [x for x in glyphs if x.width != max_width]
+    wrong_width_count = len(wrong_width_glyphs)
+
+    if wrong_width_count == 0:
+        print('This is a Monospaced font.')
+    else:
+        bad_glyph = wrong_width_glyphs[0]
+        if (wrong_width_count == 1 and
+            bad_glyph.unicode == -1 and
+                bad_glyph.glyphname == '.null'):
+            print('This is a Monospaced font with a .null bad glyph. '
+                  'Fixing...')
+            font.removeGlyph(bad_glyph)
+        else:
+            if wrong_width_count <= 5:
+                print('This is a Monospaced font except for '
+                      f'{wrong_width_count} glyphs:')
+                for glyph in wrong_width_glyphs:
+                    print(f'{glyph.glyphname} ({glyph.unicode}): '
+                          '{glyph.width}')
+
+
+def force_monospaced_font(font):
+    glyphs = list(font.glyphs())
+    widths = [x.width for x in glyphs]
+    width = max(set(widths), key=widths.count)
+
+    try:
+        _null = [x for x in glyphs if x.glyphname == '.null'][0]
+    except IndexError:
+        _null = font.createChar(-1, '.null')
+        _null.width = width
+    glyphs = list(font.glyphs())
+    for glyph in glyphs:
+        if glyph.glyphname in ('.notdef', '.null', 'nonmarkingreturn'):
+            glyph.width = width
+            continue
+        if glyph.width == width:
+            print(f'Width of {glyph.glyphname} is ok')
+            continue
+        print(f'Fixing width of {glyph.glyphname} from {glyph.width} to ',
+              end='')
+        glyph.transform(psMat.scale(width/glyph.width))
+        print(f'{glyph.width}... done')
+
+
+def fix_glyph_data(font, shift_unicode_values, replace_unicode_values):
+    for glyph in font.glyphs():
+        shift = [x[2] for x in shift_unicode_values
+                 if x[0] <= glyph.unicode <= x[1]]
+        if glyph.unicode in replace_unicode_values:
+            corrected_unicode = replace_unicode_values[glyph.unicode]
+        elif shift:
+            corrected_unicode = glyph.unicode + shift[0]
+        elif glyph.glyphname.startswith('$'):
+            corrected_unicode = int(glyph.glyphname[1:], 16)
+        elif glyph.glyphname.startswith('char'):
+            corrected_unicode = int(glyph.glyphname[4:])
+        elif glyph.glyphname.startswith('uni'):
+            corrected_unicode = int(glyph.glyphname[3:], 16)
+        else:
+            continue
+
+        glyph.unicode = corrected_unicode
+        try:
+            glyph.glyphname = unicodedata.name(chr(glyph.unicode))
+        except ValueError:
+            print(f'No unicode character name for {glyph.unicode}')
+
+
+def convert_font(input_filename, output_filename=None, output_dir='.',
+                 force_monospaced=False,
+                 force_family=None, force_subfamily=None):
+    font = fontforge.open(input_filename)
+
+    if force_family:
+        font.fontname = force_family
+
+    if not output_filename:
+        output_filename = font.fontname + '.ttf'
+
+    if output_dir:
+        output_filename = os.path.join(output_dir, output_filename)
+
+    print(f'Converting {input_filename} to {output_filename}')
+
+    fix_font(font)
+
+    fix_subfamily(font, force_subfamily)
+
+    if force_monospaced:
+        force_monospaced_font(font)
+    else:
+        fix_monospaced_font(font)
+
+    font.generate(output_filename, flags=("opentype",))
+
+    print('ok')
+
+
+def get_input_files_from_directory(directory):
+    return glob(os.path.join(directory, '*.pf[ab]'))
+
+
+def convert_vector_fonts(input_files, args):
+    skipped_filenames = []
+    for input_file in sorted(input_files):
+        print('--------')
+        try:
+            convert_font(input_file,
+                         output_dir=args.output_dir,
+                         force_monospaced=args.force_monospaced)
+        except SkipFont:
+            print(f'Skipping font {input_file}')
+            skipped_filenames.append(input_file)
+
+    if skipped_filenames:
+        print('--------')
+        print('Files that were not converted:')
+        for filename in skipped_filenames:
+            print(filename)
+
+
+# get font family name and style name by ftdump
+def get_font_fullname(filename):
+    output = subprocess.check_output('ftdump ' + filename, shell=True)
+
+    output = output.decode('utf8')
+    # only contain one font face
+    assert 'Face number: 1' not in output
+    result = {}
+    for row in output.split('\n'):
+        if ':' in row:
+            key, value = row.split(': ')
+            result[key.strip()] = value.strip()
+
+    familyname, stylename = result['family'], result['style']
+    return (familyname, stylename)
+
+
+def bitmap_transform_font(font, arguments):
+    funcname, xoff, yoff = arguments.split(',')
+    xoff, yoff = int(xoff), int(yoff)
+
+    if not getattr(font, 'bitmapTransform', None):
+        raise RuntimeError('Please, patch your fontforge build to add the '
+                           'bitmapTransform function if you want to use it')
+    font.bitmapTransform(funcname, xoff, yoff)
+
+
+def convert_bitmap_fonts(input_files, args):
+    font_filenames = {}
+    output_dir = args.output_dir
+
+    for filename in input_files:
+        if '-ISO8859-' in filename or '-KOI8-' in filename:
+            continue
+        fullname = get_font_fullname(filename)
+        font_filenames.setdefault(fullname, []).append(filename)
+
+    for familyandstyle, filenames in font_filenames.items():
+        familyname, stylename = familyandstyle
+        if args.family:
+            familyname = args.family
+        if args.subfamily:
+            stylename = args.subfamily
+        fullname = f'{familyname} {stylename}'
+        font = fontforge.open(filenames[0])
+        for filename in filenames[1:]:
+            if filename.endswith('.gz'):
+                with tempfile.NamedTemporaryFile(suffix='.pcf') as tmpfile:
+                    with gzip.open(filename) as gzipfile:
+                        print(filename, tmpfile.name)
+                        tmpfile.write(gzipfile.read())
+                        tmpfile.flush()
+                    font.importBitmaps(tmpfile.name)
+            else:
+                font.importBitmaps(filename)
+
+        if args.bitmapTransform:
+            bitmap_transform_font(font, args.bitmapTransform)
+
+        font.familyname = familyname
+        fix_subfamily(font, args.subfamily)
+
+        shift_unicode_values = [[int(z, 0) for z in x.split(',')]
+                                for x in args.shift_unicode_values]
+        replace_unicode_values = dict([[int(z, 0) for z in x.split(',')]
+                                      for x in args.replace_unicode_values])
+
+        if (args.fix_glyph_unicode or
+                shift_unicode_values or replace_unicode_values):
+            fix_glyph_data(font, shift_unicode_values, replace_unicode_values)
+
+        output_filename = fullname.replace(' ', '-') + '.otb'
+        print(f'Converting {" ".join(filenames)} to {output_filename}')
+
+        if output_dir:
+            output_filename = os.path.join(output_dir, output_filename)
+        font.generate(output_filename, bitmap_type='otb', flags=("opentype",))
+
+
+def main():
+    parser = argparse.ArgumentParser(description="This script converts fonts "
+                                     "to ttf format")
+    parser.add_argument('--input-dir', default=None,
+                        help='Read fonts to convert from all *.pf[ab] files '
+                        'in this directory')
+    parser.add_argument('--family', default=None,
+                        help='Set family name of the output font')
+    parser.add_argument('--subfamily', default=None,
+                        help='Set subfamily/style name of the output font')
+    parser.add_argument('--output-dir', default='.',
+                        help='Output directory for generated files')
+    parser.add_argument('input_files', nargs='*', default=[],
+                        help='Input files')
+    parser.add_argument('--force-monospaced', action="store_true",
+                        help='Force the output font to be monospaced by '
+                        'resizing glyphs if needed')
+
+    parser.add_argument('--bitmap-fonts', action="store_true",
+                        help='Handle all parameters as bitmap fonts and merge '
+                        'different sizes of same families together')
+
+    parser.add_argument('--fix-glyph-unicode', action="store_true",
+                        help='Try to fix unicode points and glyph names based '
+                        'on glyph names containing hexadecimal codes')
+
+    parser.add_argument('--replace-unicode-values', action='append',
+                        default=[],
+                        help='When passed 2 comma separated numbers a,b '
+                        'the glyph with an unicode value of `a` is replaced '
+                        'with the unicode value `b`. '
+                        'Can be used more than once')
+
+    parser.add_argument('--shift-unicode-values', action='append',
+                        default=[],
+                        help='When passed 3 comma separated numbers a,b,c '
+                        'this shifts the unicode values of glyphs between a '
+                        'and b by adding c. Can be used more than once')
+
+    parser.add_argument('--bitmapTransform', default=None,
+                        help='If used, all glyphs are modified with the '
+                        'transformation function and values passed as '
+                        'parameters (<fliph|flipv|rotate90cw|rotate90ccw|'
+                        'rotate180|skew|transmove>,<xoff>,<yoff>)')
+
+    parser.add_argument('--version', action='version',
+                        version='%(prog)s 1.0.7')
+
+    args = parser.parse_args()
+
+    input_files = set(args.input_files)
+    if args.input_dir:
+        input_files.update(get_input_files_from_directory(args.input_dir))
+
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
+    if not os.path.isdir(args.output_dir):
+        print(f'Output directory argument {args.output_dir} '
+              'is not a directory')
+        sys.exit(1)
+
+    if args.bitmap_fonts:
+        convert_bitmap_fonts(input_files, args)
+    else:
+        convert_vector_fonts(input_files, args)
+
+
+if __name__ == '__main__':
+    main()

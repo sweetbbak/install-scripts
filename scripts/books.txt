@@ -1,0 +1,21 @@
+#RUST + JS + Algo's
+"https://www.zero2prod.com/"
+
+"https://www.amazon.com/gp/product/0262033844/ref=as_li_tl?ie=UTF8&camp=1789&creative=9325&creativeASIN=0262033844&linkCode=as2&tag=theprimeagen-20&linkId=71484d3b34da82d8237b04835e2c7dd8"
+
+"https://www.amazon.com/gp/product/0134757599/ref=as_li_tl?ie=UTF8&camp=1789&creative=9325&creativeASIN=0134757599&linkCode=as2&tag=theprimeagen-20&linkId=0238d5b7aaf5070e808d28e43738b28e"
+
+"https://www.amazon.com/gp/product/1593274084/ref=as_li_tl?ie=UTF8&camp=1789&creative=9325&creativeASIN=1593274084&linkCode=as2&tag=theprimeagen-20&linkId=8477a5b6e93cb5aad8b610ceab530f8b"
+JavaScript for Kids: A Playful Introduction to Programming 
+
+"https://www.amazon.com/gp/product/0984782850/ref=as_li_tl?ie=UTF8&camp=1789&creative=9325&creativeASIN=0984782850&linkCode=as2&tag=theprimeagen-20&linkId=fb8d80c12980f31342f73dd56362d597"
+Cracking the Coding Interview: 189 Programming Questions and Solutions 6th Edition
+
+"https://www.amazon.com/gp/product/0321842685/ref=as_li_tl?ie=UTF8&camp=1789&creative=9325&creativeASIN=0321842685&linkCode=as2&tag=theprimeagen-20&linkId=157efd70e4956987911c34c47dd6894c"
+Hacker's Delight 2nd Edition
+
+"https://www.amazon.com/gp/product/1593272200/ref=as_li_tl?ie=UTF8&camp=1789&creative=9325&creativeASIN=1593272200&linkCode=as2&tag=theprimeagen-20&linkId=9f1767bc40d089fd2a33c993677f7044"
+The Linux Programming Interface: A Linux and UNIX System Programming Handbook 1st Edition
+
+"https://interpreterbook.com/"
+Writing An Interpreter In Go

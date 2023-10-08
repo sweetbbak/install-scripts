@@ -1,0 +1,77 @@
+#!/bin/bash
+# set -x
+# script to easily use an image with neofetch and 
+# the ability to see your history and add favorites
+
+history_file="$HOME/.cache/neofetch.history"
+faves="$HOME/.cache/neofetch.favorites"
+hist_limit=150
+
+# Directories to search
+array=(
+    ~/Pictures
+    ~/ssd/gallery-dl
+)
+
+# make files if they don't exist to avoid stupid errors
+[ ! -f "$history_file" ] && touch "$history_file"
+[ ! -f "$faves" ] && touch "$faves"
+
+# history line count
+hcount="$(wc -l < "$history_file")"
+
+# if the line count of history file is longer than the limit then cut it down to 15 
+if [[ "$hcount" -ge "$hist_limit" ]]; then
+    ffff="$(tail -n 15 "$history_file")" 
+    echo "$ffff" > "$history_file"
+fi
+
+rando() {
+    read -r LINES COLUMNS < <(stty size)
+
+    image=$(fd . "${array[@]}" -e gif -e png -e jpg -e webp |grep -v "nsfw\|screenshots" | shuf -n1 )
+    neofetch --kitty "${image}"
+
+    echo "${image}" >> "$history_file"
+    # print image name
+    image="${image##*/}"
+    # imglen="${#image}"
+    # tput cup "$(( LINES - 2 ))" $(( COLUMNS - imglen )) && printf '%s\n' "${image}"
+}
+
+historyfetch() {
+    # remove duplicates
+    his="$(cat "$history_file")"
+    # his="$(uniq < "$history_file")"
+
+    his=$(
+    while read -r lines; do
+        printf "%s\n" "$lines"
+    done < "$history_file" | uniq | tac | fzf --height=5% --reverse
+    )
+
+    # [ -z "$his" ] || echo "$his" > "$history_file"
+    # his="$(printf "%s\n" "$his" | tac | gum choose)"
+    kitty +kitten icat --place 50x50@0x10 "${his}"
+    tput cup 0 0 && gum confirm && echo "$his" >> "$faves"
+    neofetch --kitty "${his}"
+}
+
+print_help() {
+    echo -e "\e[31m${0##*/}\e[0m"
+    echo -e "\e[31m\t-f\tchoose an image from favorites\e[0m"
+    echo -e "\e[31m\t-j\tauto-pick a random image from favorites\e[0m"
+    echo -e "\e[31m\t-d\t<directory>\e[0m"
+    echo -e "\e[31m\t-x\tchoose an image from history to add to favorites (newest at the top)\e[0m"
+    echo -e "\e[31m\t-h\tshow this help message\e[0m"
+}
+
+case "$1" in
+    # -f|--fa*) img="$(gum choose < "$faves")" ; [ -f "$img" ] && neofetch --kitty "${img}" ; exit ;;
+    -f|--fa*) img="$(gum choose < "$history_file")" ; [ -f "$img" ] && neofetch --kitty "${img}" ; exit ;;
+    -j) neofetch --kitty "$(shuf -n1 < "$faves")" ;;
+    -H|-x) historyfetch ;;
+    -d|--dir*) shift && array+=("$1") ; rando ;;
+    -h|--h*) print_help ;;
+    *) rando ;;
+esac

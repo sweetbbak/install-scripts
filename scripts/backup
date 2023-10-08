@@ -1,0 +1,4 @@
+#!/bin/bash
+tar --exclude="lost+found" --exclude=".cache" --exclude="go" --exclude="hdd" --exclude="github" --exclude="ssd" --exclude=".codeium" --exclude=".ollama" --exclude=".npm" --exclude=".thunderbird" --exclude=".tlauncher" --exclude=".undo-nvim" --exclude=".vscode-oss" --exclude=".wine" --exclude=".java" --exclude=".gradle" \
+    -cf - /home/sweet/ -P | pv | gzip > /home/sweet/hdd/backup.tar.gz
+

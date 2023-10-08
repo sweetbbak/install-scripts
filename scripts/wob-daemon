@@ -1,0 +1,23 @@
+#!/bin/bash
+
+wobpipe=$(mktemp --dry-run /tmp/wob_XXX.fifo)
+# mkfifo -m 600 "${wobpipe}"
+mkfifo "${wobpipe}" || exit
+
+cleanup() {
+    trap - EXIT
+    [ -f "${wobpipe}" ] && rm "${wobpipe}"
+}
+
+daemon() {
+    [ -f "${wobpipe}" ] && {
+        tail --follow "${wobpipe}" | wob
+    } || exit
+}
+
+trap cleanup EXIT SIGINT SIGHUP TERM
+export -f daemon
+daemon &
+pid=$!
+echo "Daemon started"
+echo "${pid}"

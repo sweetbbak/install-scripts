@@ -1,0 +1,5 @@
+#!/bin/bash
+model=${2:-"en_US-danny-low.onnx"}
+rate=${3:-16000}
+sid=${4:-0}
+echo "$1" | ./piper --model "$model" -s "$sid" --output_raw | aplay -f S16_LE -c1 -r"$rate"

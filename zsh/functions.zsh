@@ -1,5 +1,32 @@
 ## some handy functions I've written or collected
 
+bytes() {
+    [ -f "${1}"  ] && {
+    xxd -b "${1}" | sed -r "s/\d32{3,}.*//g" | sed "s/.*://" | sed "s/\d32//g" 
+    exit 0
+    }
+    echo -e 'bytes <file>\ndump bytes of a file'
+}
+
+getip() {
+    ip -c -o a | awk '{print $2,$4}' | column -t
+    curl -s "https://ipapi.co/8.8.8.8/yaml" | awk -F': ' '
+	/ip:/ { ip=$2 }
+	/asn:/{ asn=$2 }
+	/city:/{ city=$2;}
+	/country_name:/ { country=$2}
+	/org:/{ printf "%s, %s, %s, %s, %s\n", ip, asn, $2, city, country; }'
+}
+
+function ya() {
+	tmp="$(mktemp -t "yazi-cwd.XXXXX")"
+	yazi --cwd-file="$tmp"
+	if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+		cd -- "$cwd"
+	fi
+	rm -f -- "$tmp"
+}
+
 # copy the full path of a file
 rp() {
     case "$1" in
@@ -19,19 +46,6 @@ rp() {
 # se       stop standout
 # us       start underline
 # ue       stop underline
-
-function man() {
-	env \
-		LESS_TERMCAP_md=$(tput bold; tput setaf 3) \
-		LESS_TERMCAP_me=$(tput sgr0; tput setaf 3) \
-		LESS_TERMCAP_mb=$(tput blink; tput setaf 3) \
-		LESS_TERMCAP_us=$(tput setaf 3) \
-		LESS_TERMCAP_ue=$(tput sgr0; tput setaf 3) \
-		LESS_TERMCAP_so=$(tput smso; tput setaf 3) \
-		LESS_TERMCAP_se=$(tput rmso; tput setaf 3) \
-		PAGER="${MANPAGER:-$PAGER}" \
-		man "$@"
-}
 
 function fzcd() {
     dir="$(fd -d1 -td | fzf --preview='exa {}')"
@@ -492,7 +506,7 @@ qa() { eval $( (alias && functions|sed -nE 's@^([^_].*)\(\).*@\1@p')|cut -d"=" -
 
 # quickly edit zsh config stuff
 zrg() {
-  var=$(gum choose "zshrc" "functions" "aliases" "kitty" "xports" "bin" --item.foreground="360" --cursor="→ ")
+  var=$(gum choose "zshrc" "functions" "aliases" "zshenv" --item.foreground="360" --cursor="→ ")
   case $var in
     zshrc)
       $EDITOR $HOME/.zshrc && source ~/.zshrc;;
@@ -500,12 +514,9 @@ zrg() {
       $EDITOR $HOME/.config/zsh/functions.zsh ;;
     aliases)
       $EDITOR $HOME/.config/zsh/alias.zsh ;;
-    kitty)
-      $EDITOR $HOME/.config/kitty/kitty.conf ;;
-    xports)
-      $EDITOR $HOME/.config/zsh/xport.zsh ;;
-    bin)
-      $EDITOR $HOME/bin ;;
+    zshenv)
+      $EDITOR $HOME/.zshenv ;;
+    *) exit 0 ;;
   esac
 }
 
@@ -514,5 +525,6 @@ mkcd() { mkdir -p -- "$@" && cd -- "$@"; }
 
 #interactive cd
 function jj {
+    command -v llama -h &>/dev/null || exit
     cd "$(llama "$@")"
 }

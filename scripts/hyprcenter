@@ -1,0 +1,95 @@
+#!/usr/bin/env python3
+"""Centers a floating window in the available space in Hyprland"""
+
+import os
+import sys
+import json
+import subprocess
+from typing import Any
+
+
+def main():
+    help, resize = parse_args()
+
+    if help:
+        cmd = os.path.basename(sys.argv[0])
+        print(f"Usage: {cmd} [-h/--help] [-r/--resize]")
+        print()
+        print("Moves the active window to the center of available space.")
+        print()
+        print("-r/--resize   Also resize the window to an appropriate size.")
+
+        sys.exit(0)
+
+    commands = []
+
+    area_w, area_h = available_area()
+    window_w, window_h = active_window_size()
+
+    if resize:
+        gap = get_gap()
+        window_h = area_h - (gap * 2)
+        window_w = max(1920 - (gap * 2), window_h)
+
+        commands.append(f"resizeactive exact {window_w} {window_h}")
+
+    new_window_x = round((area_w / 2.0) - (window_w / 2.0))
+    new_window_y = round((area_h / 2.0) - (window_h / 2.0))
+
+    commands.append(f"moveactive exact {new_window_x} {new_window_y}")
+
+    hyprctl_dispatch(*commands)
+
+
+def parse_args() -> tuple[bool, bool]:
+    help = False
+    resize = False
+
+    if "-h" in sys.argv or "--help" in sys.argv:
+        help = True
+
+    if "-r" in sys.argv or "--resize" in sys.argv:
+        resize = True
+
+    return [help, resize]
+
+
+def get_gap() -> int:
+    return hyprctl("getoption general:gaps_out")["int"]
+
+
+def available_area() -> tuple[int, int]:
+    monitors = hyprctl("monitors")
+    active = next(x for x in monitors if x["focused"])
+
+    reserved_x = active["reserved"][0] + active["reserved"][2]
+    reserved_y = active["reserved"][1] + active["reserved"][3]
+    scale = active["scale"]
+
+    return (
+        round((active["width"] - reserved_x) / scale),
+        round((active["height"] - reserved_y) / scale),
+    )
+
+
+def active_window_size() -> tuple[int, int]:
+    active = hyprctl("activewindow")
+    return (active["size"][0], active["size"][1])
+
+
+def hyprctl(command: str) -> Any:
+    return json.loads(subprocess.getoutput(f"hyprctl -j {command}"))
+
+
+def hyprctl_dispatch(*commands: str) -> None:
+    commands = [f"dispatch {x}" for x in commands]
+    batched_command = " \\; ".join(commands)
+
+    result = subprocess.getoutput(f"hyprctl --batch {batched_command}")
+
+    if result.strip() != ("ok" * len(commands)):
+        raise RuntimeError(f"Unexpected output from batched command: {result.strip()}")
+
+
+if __name__ == "__main__":
+    main()

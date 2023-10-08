@@ -1,0 +1,33 @@
+#!/bin/bash
+
+os="EndeavourOS Linux"
+user="$(whoami)"
+uptime="$(uptime --pretty)"
+font="Maple Mono"
+term="kitty"
+cpu="13th Gen Intel i5-13600K (20) @ 5.100GHz"
+gpu="AMD RADEON 6700XT"
+
+tput clear
+kitten icat --transfer-mode=memory --stdin=no --place=40x20@0x0 ~/Pictures/anime-icons/3559851f966fae7722df9063a83790f6.jpg
+while true; do
+tput civis
+stty -echo
+
+read -rn1 key
+sleep .001
+    tput cup 1 45 && printf "%s\n" "$os"
+    tput cup 2 45 && printf "%s\n" "$user"
+    tput cup 3 45 && printf "%s\n" "$uptime"
+    tput cup 4 45 && printf "%s\n" "$font"
+    tput cup 5 45 && printf "%s\n" "$term"
+    tput cup 6 45 && printf "%s\n" "$cpu"
+    tput cup 7 45 && printf "%s\n" "$gpu"
+    case "${key}" in
+        j) ;;
+        *) break ;;
+    esac
+done
+
+tput cnorm
+stty echo

@@ -1,0 +1,21 @@
+#!/bin/bash
+# piper-tts outputs raw PCM audio (file.pcm)
+# s16le, 1 channel, 22050 rate
+# converted to a wav file for easy playback
+
+cleanup() {
+    [ -f "$rawout" ] && rm "${rawout}"
+}
+
+rawout=$(mktemp)
+trap cleanup EXIT
+
+echo "${@}" | piper-tts --model ~/ssd/ivona_tts/amy.onnx --output_raw > "$rawout" 
+[ -f "$rawout" ] && {
+    out=output_$RANDOM.wav
+    ffmpeg -f s16le -ar 22050 -ac 1 -i "${rawout}" "./${out}" &>/dev/null
+}
+
+if command -v mpv >/dev/null; then
+    mpv "${out}"
+fi

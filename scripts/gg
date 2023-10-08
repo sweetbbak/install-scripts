@@ -1,0 +1,25 @@
+#!/bin/bash
+
+cdd(){
+  dirn="$(gum file --directory.border-background=1 --selected.italic)"
+  print -z -- "$(dirname "$dirn")"||exit
+}
+
+sh(){
+  exe="$(gum file --directory.border-background=1 --selected.italic)"
+  print -z -- "$(realpath "$exe")"
+}
+
+edit() {
+  exe="$(gum file --directory.border-background=1 --selected.italic)"
+  helix "$exe"
+}
+
+gum="$(gum choose run chdir edit exit)"
+
+case "$gum" in
+  chdir) cdd ;;
+  run) sh ;;
+  edit) edit ;;
+  *) exit ;;
+esac

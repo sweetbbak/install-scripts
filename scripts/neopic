@@ -1,0 +1,2 @@
+#!/bin/bash
+neofetch --kitty $(nsxiv -rt ~/Pictures) --size 30%

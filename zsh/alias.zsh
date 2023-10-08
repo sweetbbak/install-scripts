@@ -6,24 +6,25 @@ alias zz="zathura"
 alias nsxiv="nsxiv -a"
 alias v='nvim'
 alias nv='nvim'
-alias cat='bat'
-alias gsw='gamescope -W 1080 -H 1920 wine'
+alias cat='bat -p'
+alias gsw='gamescope -f -W 1920 -H 1080 -- wine'
 # Core utils + replacements
-alias ls="exa --icons"
-alias ll='exa -Fal'
-alias l='exa --long --grid'
-# alias lsd="exa -l --group-directories-first"
-alias lsa='ls -d -- .*(/)'
-alias lsd='ls -d -- .*(.)'
+alias ls="eza --icons"
+alias ll='eza -Fal'
+alias l='eza --long --grid'
+alias lsd="eza -l --group-directories-first"
+# alias lsa='ls -d -- .*(/)'
+# alias lsd='ls -d -- .*(.)'
 
-alias e="exa --icons --color=always"
-alias ee="exa --icons --color=always -a"
-alias tree='exa -a -I .git --tree' # exa is an alternative to ls
+alias e="eza --icons --color=always"
+alias ee="eza --icons --color=always -a"
+alias tree='eza -a -I .git --tree' # eza is an alternative to ls
+alias du='du -sh'
 
 alias mv="mv -i"
 alias cp="cp -rvn"
 alias grep="grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn}"
-alias rd='rm -rI "$(exa -D| fzf --height=20% --preview="exa -l {}")"'
+alias rd='rm -rI "$(eza -D| fzf --height=20% --preview="eza -l {}")"'
 alias cxx='chmod +x "$(rg --files -g "*.sh"|fzf -1 --height=20% --preview-window=hidden)"'
 
 # Utility functions for Core utils
@@ -129,6 +130,7 @@ alias parts="lsblk --output NAME,LABEL,FSTYPE,MOUNTPOINTS,SIZE,MODEL"
 
 alias fonts='fc-list --format="%{family[0]}\n" | sort|uniq| fzf'
 alias paths='sed "s/:/\n/g" <<< $PATH'
+alias fpaths='sed "s/:/\n/g" <<< $FPATH'
 # alias finddir="find . -type d -name"
 # alias findfile="find . -type f -name"
 

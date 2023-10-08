@@ -1,0 +1,107 @@
+#!/bin/bash
+# simple wrapper script around
+# running wine IVONA TTS Voices
+
+export WINEPREFIX="$HOME/.sapi"
+export WINEARCH=win32
+export WINEDEBUG=-wintab32
+export WINEDEBUG=-all
+
+balcon="$HOME/ssd/vmshare/tts/balcon/balcon.exe"
+voice='IVONA 2 Amy'
+
+voices=(
+    Amy
+    Salli
+    Kimberly
+    Kendra
+    Jennifer
+    Ivy
+    Gwenyth
+)
+
+print_help() {
+    exe="${0##*/}"
+    echo -e "\e[3m\e[3m${exe} [OPTIONS] <text> \e[23m"
+    echo -e '\n '
+    echo -e "\e[3m\e[1m\e[4mOptions:\e[23m\e[24m "
+    echo -e '    \e[3m-h, --help\e[23m
+            Show help text'
+    echo -e '    \e[3m-V, --version\e[23m
+            Print version information'
+    echo -e '    \e[3m-v, --voice\e[23m
+            voice to use for TTS'
+    echo -e '    \e[3m-r, --rate\e[23m
+            rate of speech from -10 to 10'
+    echo -e '    \e[3m-f, --file\e[23m
+            /path/to/file to read from for TTS'
+    echo -e '    \e[3m-t, --text\e[23m
+            text to read for TTS'
+    echo -e '    \e[3m-s, --stdin\e[23m
+            read from stdin for TTS'
+    echo -e '    \e[3m-l, --list\e[23m
+            list IVONA voices'
+    echo -e '    \e[3m-c, --cb\e[23m
+            Read text from clipboard to TTS'
+    echo -e '    \e[3m-o, --output\e[23m
+            /path/to/input-file /path/to/output.wav used to synth from text file to wav file'
+
+}
+
+show_version() {
+    echo -e "${0##*/} Version 0.0.3"
+}
+
+tts() {
+    wine "${balcon}" "${balcon_opts}" -n "${voice}" -t "${@}" 2&>/dev/null
+    printf "%s %s %s %s %s %s\n" "${balcon}" "${balcon_opts}" -n "${voice}" -t "${@}"
+}
+
+ttx() {
+    # printf "%s\n" "${balcon}" "${balcon_opts}" -n "${voice}" "${@}" 2&>/dev/null
+    wine "${balcon}" "${balcon_opts}" -n "${voice}" "${@}" 2&>/dev/null
+}
+
+
+tts2file() {
+    input_file="$1"
+    output_file="$2"
+    wine "${balcon}" "${balcon_opts}" -n "${voice}" -f "${input_file}" -w "${output_file}" 2&>/dev/null
+}
+
+tts_from_file() {
+    [ -f "$1" ] && text="$(perl -pe 's/[^[:ascii:]]//g' < "$1")"
+    tts "${text}"
+}
+
+steamdeck_clip() {
+    qdbus org.kde.klipper /klipper getClipboardHistoryItem 0
+}
+
+balcon_opts=()
+
+#[ -z "$1" ] && print_help
+
+if [ "$1" = - ]; then
+    while read -r i; do text+=("$i"); done
+fi    
+
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -h|--help) print_help && exit 0 ;;
+        -V|--version) show_version && exit 0 ;;
+        -v|--voice) shift && voice="${1}" ;;
+        -r|--rate) shift && balcon_opts+=("-s ${1}") ;;
+        -f|--file) shift && tts_from_file "${1}" ; exit 0 ;;
+        -e) shift && tts "${@}" ; exit 0 ;;
+        -s|--stdin) printf "%s\n" "$(cat /dev/stdin | perl -pe 's/[^[:ascii:]]//g')" | tts ; exit 0 ;;
+        -l|--list) printf "%s\n" "${voices[@]}" ;;
+        -c|--cb)  tts < <(wl-paste | perl -pe 's/[^[:ascii:]]//g') ;;
+        -o|--output) shift && tts2file "${1}" "${2}" ;;
+        -t|--text) shift && tts "${@}" ; exit 0 ;;
+        *)  print_help && exit ;;
+    esac
+    shift
+done
+

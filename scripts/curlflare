@@ -1,0 +1,2 @@
+#!/bin/bash
+curl -sL --tls13-ciphers TLS_AES_128_GCM_SHA256 --tlsv1.3 -A "uwu" "$@"

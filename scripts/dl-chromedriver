@@ -1,0 +1,24 @@
+#!/bin/bash
+# download chromedriver
+# not working yet
+
+exit
+
+cleanup() {
+	[ -f "$file" ] && rm "$file"
+}
+
+url=https://chromedriver.chromium.org/downloads
+file=$(mktemp)
+curl "${url}" > "${file}"
+
+trap cleanup EXIT
+
+drivers=()
+drivers="$(cat "${file}" | pup 'a[href]' | grep path= | grep -o 'href=".*/" ' | sed -e 's/href="//g' -e 's/\"//g')"
+choice="$(printf "%s\n" "${drivers}" | gum choose)"
+
+curl -fsSl "${choice}" > "${file}"
+cat "${file}" | idkbro
+echo -e "Would you like to download this URL?\n${choice}"
+gum confirm && curl -fsSl "${choice}"

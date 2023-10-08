@@ -1,0 +1,9 @@
+#!/bin/bash
+# script to search google and return links
+# search "query" => ['results']
+# printf 'GET /search?q=cats\n' | nc google.com 80 | tidy --custom-tags blocklevel -i 2> /dev/null | awk '/\/url\?q=.*/{print $0}' | sed 's/^[[:blank:]].*"\(.*\)"$/\1/' | sed 's/\/url?q=//' | grep -v google
+
+query="${*}"
+printf "Searching for: %s" "${query// /+}"
+printf 'GET /search?q=cats\n' | nc google.com 80 | tidy --custom-tags blocklevel -i 2> /dev/null | awk '/\/url\?q=.*/{print $0}' | sed 's/^[[:blank:]].*"\(.*\)"$/\1/' | sed 's/\/url?q=//' | grep -v google
+

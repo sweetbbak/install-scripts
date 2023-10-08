@@ -1,0 +1,7 @@
+#!/bin/bash
+
+themes=(
+https://catppuccin.github.io/discord/dist/catppuccin-mocha-pink.theme.css
+https://raw.githubusercontent.com/refact0r/midnight-discord/master/midnight.theme.css
+https://github.com/refact0r/midnight-discord/blob/master/midnight.theme.css
+)

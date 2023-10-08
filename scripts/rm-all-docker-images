@@ -1,0 +1,3 @@
+#!/bin/bash
+printf "%s\n" "Would you like to delete all Docker images?"
+gum choose && docker rmi $(docker images -a -q)

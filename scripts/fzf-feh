@@ -1,0 +1,3 @@
+#!/bin/bash
+
+fd . ~/Pictures | fzf --preview="feh --bg-fill {}" | xargs -I {} feh --bg-fill {}

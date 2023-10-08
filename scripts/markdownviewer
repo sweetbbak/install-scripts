@@ -1,0 +1,17 @@
+from textual.app import App, ComposeResult
+from textual.widgets import MarkdownViewer
+import sys
+
+EXAMPLE_MARKDOWN = open(sys.argv[1])
+EXAMPLE_MARKDOWN = EXAMPLE_MARKDOWN.read()
+
+
+class MarkdownExampleApp(App):
+    def compose(self) -> ComposeResult:
+        yield MarkdownViewer(EXAMPLE_MARKDOWN, show_table_of_contents=True)
+
+
+if __name__ == "__main__":
+    app = MarkdownExampleApp()
+    app.run()
+

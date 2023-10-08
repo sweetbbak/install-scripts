@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# fzf -m -x | sed -e "s/^/'/g" -e "s/$/'/g" | tr '\n' ' ' | xargs "$@" ;
+fzf -m -x | tr '\n' '\0' | xargs -r0 "$@"

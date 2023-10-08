@@ -1,0 +1,36 @@
+#!/bin/sh
+
+FIFO="/tmp/fzf_preview_fifo"
+[ -p "$FIFO" ] || mkfifo "$FIFO"
+
+start_ueberzugpp() {
+    ueberzugpp layer --silent <"$FIFO" &
+    exec 3>"${FIFO}"
+}
+
+cleanup() {
+    exec 3>&-
+}
+trap cleanup HUP INT QUIT TERM PWR EXIT
+
+preview_image() {
+    echo '{"path": "'"$1"'", "action": "add", "identifier": "fzfpreview", "x": 10, "y": 5, "width": 100, "height": 20}' >"$FIFO"
+}
+
+case "$1" in
+    -W)
+        shift
+        preview_image "$@"
+        exit
+        ;;
+esac
+
+main() {
+    start_ueberzugpp
+    fzf --preview "$0 -W {}" --preview-window=up:60%:wrap
+    if [ -n "$selected_image" ]; then
+        echo "Selected image: $selected_image"
+    fi
+    rm "$FIFO"
+}
+main

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+count="${1}"
+shift
+cmd="$@"
+
+i=0
+while true; do
+	if (( i == count )); then
+		exit 0
+	else
+		bash -c "$cmd"
+		printf "%s\n" "$i"
+		i=$(( i + 1 ))
+		sleep 0
+	fi
+done

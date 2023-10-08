@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+
+declare -A colors
+colors[red]=$(tput setaf 1)
+colors[green]=$(tput setaf 2)
+colors[blue]=$(tput setaf 4)
+colors[reset]=$(tput sgr0)
+declare processes=4
+declare quiet
+declare force
+declare -a dirs
+declare -a ignore_dir
+declare -a ignore_dirs
+declare -a errs
+
+usage() {
+  LESS=-FEXR less <<'HELP'
+gitup [OPTIONS] [dirs]
+
+search for git repos and update them
+
+if unspecified, dir defaults to $HOME
+
+  -i [dir]       comma separated list of directory paths to not search
+  -p [number]    how many processes to run `git pull` in parallel
+  -q             quiet level, may be stacked
+                 first level suppresses output from `git pull`
+                 second level suppresses job info
+  -F             don't run interactively, `git pull` all dirs
+                 use with caution, make sure you know which dirs will be matched
+                 works best if gitup is provided a list of dirs known to have git repos
+  -h             print this help
+HELP
+}
+
+color() {
+  local c
+  c="$1"
+  shift
+  printf '%s' "${colors[$c]}"
+  printf '%s\n' "$@"
+  printf '%s' "${colors[reset]}"
+}
+
+err() {
+  color red "$@" >&2
+}
+
+die() {
+  [[ -n "$1" ]] && err "$1"
+  exit 1
+}
+
+has() {
+  local verbose
+  if [[ $1 = '-v' ]]; then
+    verbose=1
+    shift
+  fi
+  for c; do c="${c%% *}"
+    if ! command -v "$c" &> /dev/null; then
+      (( "$verbose" > 0 )) && err "$c not found"
+      return 1
+    fi
+  done
+}
+
+has -v fzf git || die
+
+while getopts ':hqp:i:F' x; do o="$OPTARG"
+  case "$x" in
+    h) usage; exit; ;;
+    p) processes="$o" ;;
+    q) (( ++quiet )) ;;
+    i) IFS=',' read -ra ignore_dir <<< "$o" ;;
+    F) (( ++force )) ;;
+  esac
+done
+shift $(( OPTIND - 1 ))
+
+while :; do
+  if [[ -d "$1" ]]; then
+    dirs+=( "$1" )
+  fi
+  shift || break
+done
+
+for o in "${ignore_dir[@]}"; do
+  ignore_dirs+=( -path "*/$o" -o  )
+done
+
+(( ${#dirs[@]} > 0 )) || dirs=("$HOME")
+
+mapfile -t repos < <(find "${dirs[@]}"  \
+  \( "${ignore_dirs[@]}" \
+    -fstype 'devfs' \
+    -o -fstype 'devtmpfs' \
+    -o -fstype 'proc' \
+  \) -prune -o -name '.git' -printf '%h\n' 2> /dev/null |
+  fzf --multi --cycle --inline-info +s -e ${force:+-f /})
+
+(( ${#repos[@]} > 0 )) || exit
+
+update() {
+  local name dir
+  dir="$1"
+  name="${dir##*/}"
+  (( quiet > 1 )) || color blue ":: updating $name"
+  if git -C "$dir" pull ${quiet:+-q}; then
+    (( quiet > 1 )) || color green ":: updated $name"
+  else
+    errs+=( "$name" )
+  fi
+}
+
+for d in "${repos[@]}"; do
+  (( count++ >= processes )) && wait -n
+  update "$d" &
+done
+wait
+
+if (( "${#errs[@]}" > 0 )); then
+  color red 'The following packages failed to update:'
+  color red "  ${errs[*]}"
+fi
+color green "updated ${#repos[@]} repos"

@@ -1,0 +1,16 @@
+#!/bin/bash
+# a script that does breadth searching first
+# instead of depth. It will search at depth 0, 1, 2, 3 etc
+# supposedly faster since files are usually close to the root
+
+# i=0
+# while results=$(find "$@" -mindepth $i -maxdepth $i) && [[ -n $results ]]; do
+#   printf '\e[1;33m%s\e[0m\n' "$results"
+#   ((i++))
+# done
+i=1
+# while results=$(fd . "${@:-$HOME}" --min-depth $i --max-depth $i ) && [[ -n $results ]]; do
+while results=$(fd . "${@}" --min-depth $i --max-depth $i ) && [[ -n $results ]]; do
+  printf '\e[1;33m%s\e[0m\n' "$results"
+  ((i++))
+done

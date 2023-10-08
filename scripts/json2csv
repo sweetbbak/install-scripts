@@ -1,0 +1,4 @@
+#!/bin/bash
+
+stdin=$(cat "${1:-/dev/stdin}")
+printf "%s\n" "$stdin" | jq '.[]| join(",")' 2>&1

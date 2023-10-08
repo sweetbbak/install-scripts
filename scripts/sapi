@@ -1,0 +1,14 @@
+#!/bin/bash
+# fuck vbscript
+
+script() {
+cat <<EOF
+Dim msg, sapi
+Set sapi = createObject("sapi.spvoice")
+Set sapi.Voice = sapi.GetVoices.Item(8)
+sapi.Speak WScript.Arguments.Item(0)
+EOF
+}
+
+cd "$HOME" || exit 1
+WINEPREFIX=~/.sapi wine cscript .sapi/say.vbs "${@}"

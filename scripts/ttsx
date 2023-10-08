@@ -1,0 +1,150 @@
+#!/bin/bash
+
+phone=R5CT32YAXLB
+swaydroid=192.168.240.112:5555
+
+# pretty print <3
+sprintf() {
+    echo -e "\e[3m\e[3m${1}\e[23m"
+}
+
+connect_scrcpy() {
+    # check if scrcpy is running and if not, start it.
+    scrcpy_process="$(pgrep scrcpy)"
+    if [ "$scrcpy_process" ]; then 
+        sprintf "scrcpy is already running"
+    else 
+        sprintf 'starting scrcpy'
+        (scrcpy --select-usb)&
+        scrcpy_process=$!
+    fi
+}
+
+kill_scrcpy() {
+    [ -n "$scrcpy_process" ] && pkill "$scrcpy_process"
+}
+
+connect() {
+    # drop scrcpy into the background
+    connect_scrcpy
+
+    # get ports forwarded if they exist, if not, do it.
+    # netstat -an | grep "LISTEN " -- also works
+    ports="$(adb forward --list)"
+    if [ -z "$ports" ]; then 
+        adb forward tcp:8022 tcp:8022 && adb forward tcp:8080 tcp:8080
+    else
+        sprintf "ports"
+        echo "$ports"
+    fi
+}
+
+connect_ports() {
+    # connect port forwarding if scrcpy is started and not port forwarding
+    ports="$(adb forward --list)"
+    if [ -z "$ports" ]; then 
+        adb forward tcp:8022 tcp:8022 && adb forward tcp:8080 tcp:8080
+    else
+        sprintf "ports"
+        echo "$ports"
+    fi
+}
+
+ssh_termux() {
+    # connect port forwarding if scrcpy is started and not port forwarding
+    ports="$(adb forward --list)"
+    if [ -z "$ports" ]; then 
+        adb forward tcp:8022 tcp:8022 && adb forward tcp:8080 tcp:8080 && ssh localhost -p 8022
+    else
+        sprintf "ports:"
+        echo "$ports"
+        ssh localhost -p 8022
+    fi
+}
+
+tts() {
+    text="${*}"
+    # ssh localhost -p 8022 "termux-tts-speak '${text}'"
+    # ttsx is a local script with a TRAP for SIGINT to stop the TTS service.
+    # this is necessary if you want to be able to stop long blocks of text.
+    ssh localhost -p 8022 "ttsx '${text}'"
+}
+
+paste_tts() {
+    # text="$(wl-paste | sed 's/[^[a-zA-Z1-9]-]//g'|tr -d \'\" | tr "\n" "\0 " | perl -pe 's/[^[:ascii:]]//g')" 
+    # text="$(wl-paste | sed 's/[^[a-zA-Z1-9]-]//g'|tr -d \'\" | perl -pe 's/[^[:ascii:]]//g')" 
+    text="${*}"
+    ssh localhost -p 8022 "termux-tts-speak '''${text}'''"
+    ssh localhost -p 8022 "termux-tts-speak '''${text}'''"
+}
+
+clean_text() {
+    text="$(echo "$1" | sed 's/[^[a-zA-Z1-9]-]//g'|tr -d \'\" | tr "\n" " " | perl -pe 's/[^[:ascii:]]//g')" 
+}
+
+cliphistory() {
+    # speak tts from clipboard history
+    # text="$(cliphist list | wofi -d | cliphist decode | sed 's/[^[a-zA-Z1-9]-]//g'|tr -d \'\" | tr "\n" "\0 " | perl -pe 's/[^[:ascii:]]//g')"
+    # text="$(cliphist list | wofi -d | cliphist decode | sed 's/[^[a-zA-Z1-9]-]//g'|tr -d \'\" | tr "\n" | perl -pe 's/[^[:ascii:]]//g')"
+    text="${*}"
+    ssh localhost -p 8022 "termux-tts-speak '${text}'"
+}
+
+choose_device() {
+    device="$(adb devices |grep -w 'device' | sed -e 's/device//g' -e 's/^[[:space:]]//g' | gum choose)"
+}
+
+connect_phone() {
+    # drop scrcpy into the background
+    # connect_scrcpy
+
+    # get ports forwarded if they exist, if not, do it.
+    # netstat -an | grep "LISTEN " -- also works
+    ports="$(adb forward --list)"
+    if [ -z "$ports" ]; then 
+        adb -s "$phone" forward tcp:8022 tcp:8022 && adb -s "$phone" forward tcp:8080 tcp:8080
+    else
+        sprintf "ports"
+        echo "$ports"
+    fi
+}
+
+help() {
+	sprintf "tts"
+	echo -e "\t tts start|connect|-s \t\t- start tts server, adb port forwarding and scrcpy"
+	echo -e "\t tts stop|-S \t\t\t- stop port forwarding"
+	echo -e "\t tts port|-P|-x \t\t- start port forwarding"
+	echo -e "\t tts -c|cmd|command \t\t- run a remote command in termux over ssh"
+	echo -e "\t tts -l|--list \t\t\t- list used ports"
+	echo -e "\t tts -q|--quit|stop-all \t- stop all ports"
+	echo -e "\t tts tts|-t|--text <text> \t- start tts"
+	echo -e "\t tts cb|-p|--paste \t\t- paste from clipboard"
+	echo -e "\t tts -H|--history|-z \t\t- choose from clipboard history"
+	echo -e "\t tts --ssh \t\t\t- ssh into termux"
+	echo -e "\t tts -h|--help \t\t\t- print help message"
+    echo
+	sprintf "<3 keep up the good work"
+}
+
+case "$1" in
+    # Connection commands
+    connect|start|-s) connect ;;
+    -sp) connect_phone ;;
+    port|-P|-x) connect_ports ;;
+    command|cmd|-c) shift && ssh localhost -p 8022 "${@}" ;;
+    stop|-S|--stop) adb forward --remove tcp:8022 ;;
+    list|-l|--list) adb forward --list ;;
+    stop-all|quit|-q|--quit) adb forward --remove-all ;;
+    # TTS Commands
+    tts|-t|--text) shift && tts "${*}" ;;
+    cb|-p|--paste) 
+        text="$(wl-paste | sed 's/[^[a-zA-Z1-9]-]//g'|tr -d \'\" | perl -pe 's/[^[:ascii:]]//g')"
+        tts "$text"
+    ;;
+    -H|--history|-z)
+        text="$(cliphist list | wofi -d | cliphist decode | sed 's/[^[a-zA-Z1-9]-]//g'|tr -d \'\" | tr "\n" " " | perl -pe 's/[^[:ascii:]]//g')"
+        tts "$text"
+    ;;
+    --ssh) ssh_termux ;;
+	-h|--help) help ;;
+esac

@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# requirements: rofi steam pactl rofi-calc rofi-emoji
+# extra requirements x11: greenclip rofi-greenclip
+# extra requirements wayland: clipman
+# required env variables: $ROFI_SCRIPTS_DIR $XDG_DATA_HOME
+
+case "$1" in
+    run) rofi -show run -theme launcher ;;
+    calc)
+        copy="xclip"
+        if [ "$XDG_SESSION_TYPE" == "wayland" ]; then
+            copy="wl-copy"
+        fi
+
+        rofi -show calc -modi calc -no-show-match -no-sort -calc-command "echo -n '{result}' | $copy" -theme calculator
+        ;;
+    clipboard)
+        if [ "$XDG_SESSION_TYPE" == "wayland" ]; then
+            clipman pick --tool=CUSTOM -T'rofi -dmenu -theme selector -p "clipboard"'
+        else
+            rofi -modi "clipboard:greenclip print" -show clipboard -theme selector
+        fi
+        ;;
+    emojis) rofi -modi emoji -show emoji -emoji-mode copy -theme selector ;;
+    games) rofi -modi games -show games -theme games ;;
+    sound_sink) pactl set-default-sink "$(pactl list short sinks | awk '{print $2}' | rofi -dmenu -theme selector -p "Select default sound sink")" ;;
+    *)
+        echo "Usage: $0 {run,calc,clipboard,emojis,games,sound_sink}"
+        ;;
+esac

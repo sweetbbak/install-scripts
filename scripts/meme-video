@@ -1,0 +1,210 @@
+#!/bin/bash
+
+FONT="helvetica"
+text_size=""
+show_img=0
+TMP_IMAGE_FOLDER='/tmp/'
+AUTO_MIN=33
+AUTO_MAX=65
+POSITIONAL_ARGS=( )
+
+help_text () {
+	while IFS= read -r line; do
+		printf "%s\n" "$line"
+	done <<-EOF
+
+	Usage:
+	  ${0##*/} VIDEO_PATH TEXT [--textsize SIZE]
+	  	[--showimage] [--font FONT | --font <FONT_FILE_PATH>] OUTPUT_FILE
+	
+	Options
+	  --textsize SIZE	Set the size of the text (default 75)
+	  --showimage		Show the caption image before making the video
+	  --font FONT		Set a font for the caption text (default: helvetica) 
+
+	EOF
+}
+
+help_text_short () {
+	echo "Usage: ${0##*/} [<VIDEO_PATH>] [<TEXT>] [--textsize SIZE]"
+	echo "	[--showimage] [--font FONT | --font <FONT_FILE_PATH>] OUTPUT_FILE"
+	echo "Use -h to get full help"
+}
+
+font_exists () {
+	local FONT_LIST=( `convert -list font | grep -E "Font" | cut -c 9-` )
+	local EXISTS=0
+	for i in "${FONT_LIST[@]}"
+	do
+		if [ "$i" = "${1}" ];
+		then
+			EXISTS=1
+			break
+		fi
+	done
+
+	if [ $EXISTS -eq 0 ];
+	then
+		if [ ! -s "${1}" ]
+		then
+			echo "Font \`${1}\` does not exist"
+			help_text_short
+			exit 1
+		fi
+	fi
+}
+
+is_number () {
+	if [[ ! $1 =~ ^[0-9]+$ ]];
+	then
+		echo "Bad argument"
+		help_text_short
+		exit 1
+	fi
+}
+
+while [[ $# -gt 0 ]]; do
+	case $1 in
+		--textsize)
+			is_number $2
+			text_size=$2
+			shift
+			shift
+			;;
+		--showimage)
+			show_img=1
+			shift
+			;;
+		--font)
+			font_exists $2
+			FONT=$2
+			shift
+			shift
+			;;
+		-h)
+			help_text
+			exit 0
+			;;
+		*)
+			POSITIONAL_ARGS+=("$1")
+			shift
+			;;
+	esac
+done
+
+get_video_size () {
+	local SIDE=$2
+	
+	ffprobe -v error -show_entries stream=${SIDE:-"width"} -of csv=p=0:s=x "${1}"
+}
+
+autosize_text () {
+    #echo $1 $2
+	local VID_W=$1 
+    	local VID_H=$2
+
+	local TEXT=$3
+	#local FONT=$4
+	local SIZE=100
+	
+	IDEAL_SIZE=$(printf "%.1f\n" $((10**1 * ${VID_H} / 100 * $AUTO_MAX))e-1 | cut -d ',' -f 1)
+	#echo "Ideal Size: $IDEAL_SIZE"
+
+	while [[ $SIZE -gt 20 ]]; do
+		local TEXT_H=$( convert -fill black \
+			-background none \
+			-size "${VID_W}x" \
+			-pointsize ${SIZE} \
+			-font ${FONT} \
+			caption:"${TEXT}" info: \
+			| grep -iEo "[0-9]+x[0-9]+ " | \
+			cut -d 'x' -f 2)
+
+		#echo "TEXT_H: $TEXT_H"
+		if [ $TEXT_H -le $IDEAL_SIZE ];
+		then
+			break
+		fi
+		let SIZE=--SIZE
+	done
+	echo $SIZE
+}
+
+open_image() {
+	echo 'Opening image'
+	xdg-open "${IMG_PATH}"
+	echo -n "Want to continue? [Y/n]: "
+	read opt
+	
+	if [[ $opt =~ ^[Nn]$ ]];
+	then
+		exit 0;
+	fi
+}
+
+make_image () {
+	echo $1 $2 $3 $FONT
+	convert \
+		-background white \
+		-fill black \
+		-font $FONT \
+		-pointsize $text_size \
+		-size $1x \
+		-gravity center \
+		caption:"${2}" \
+		"${3}"
+}
+
+make_video (){
+	echo "make_video args: "
+	echo $1 $2 $3
+	ffmpeg -loglevel error -y -i "${2}" \
+	-i "${1}" \
+	-filter_complex \
+	"[1:v]pad=iw:ih+`identify -format '%h' $2`:0:oh-ih,overlay=0:0" \
+	"${3}"
+}
+
+set -- "${POSITIONAL_ARGS[@]}"
+
+if [[ ! -e "${1}" ]];
+then
+	echo "Video ${1} does not exist"
+	help_section_short
+	exit 1
+fi
+
+if [[ $# -lt 3 ]];
+then
+	echo "Missing argument(s)"
+	help_text_short
+	exit 1
+fi
+
+
+echo 'Creating image'
+IMG_NAME="tmp_img_out_9483938.png"
+IMG_PATH="${TMP_IMAGE_FOLDER}${IMG_NAME}"
+VID_SIZE=$(get_video_size "${1}")
+
+VID_SIZE_C=$(get_video_size "${1}" "width,height" | sed -e "s/x/ /")
+
+if [ -z $text_size ];
+then
+    text_size=$(autosize_text $VID_SIZE_C "${2}")
+fi
+
+make_image $VID_SIZE "$2" $IMG_PATH
+
+if [ $show_img -eq 1 ];
+then
+    open_image
+fi
+
+echo 'Processing video...'
+make_video "${1}" $IMG_PATH "${3}"
+
+
+echo 'Video finished'
+echo 'Deleting image'
+rm -f $IMG_PATH || echo

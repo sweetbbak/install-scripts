@@ -1,0 +1,9 @@
+#!/bin/bash
+
+clear
+tput cup 0 0 && printf "\e[33m%s\e[0m\n" "file to copy: "
+tput cup 1 0 && file="$(gum file --directory --directory.italic --file -a)"
+tput cup 0 0 && printf "\e[33m%s\e[0m\n" "Destination: "
+tput cup 1 0 && dest="$(gum file --directory --directory.italic --file -a)"
+
+gum confirm && cp "${file}" "${dest}"

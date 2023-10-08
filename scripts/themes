@@ -1,0 +1,13 @@
+#!/bin/bash
+# okolors theming script
+
+image="$1"
+[ ! -f "$image" ] && echo "Invalid image"
+# colors=$(okolors "$image"|sed 's/ /\n/g')
+readarray -d' ' colors < <(okolors "$image")
+
+for x in "${colors[@]}"; do
+    echo -e "$x"
+done
+
+okolors -o swatch "${image}"

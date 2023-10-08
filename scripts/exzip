@@ -1,0 +1,11 @@
+#!/bin/bash
+dir=$(pwd)
+
+for x in *.zip; do
+    y="${x%.zip}" ; y="${y// /-}" ; y="${y,,}"
+    echo "${y}"
+    mkdir -p "${y}"
+    # mv "${x}" "${y}"
+    # cd "${y}" && extract "${x}" 2&>/dev/null || echo "cd error" && exit
+    # cd .. || exit
+done

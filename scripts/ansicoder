@@ -1,0 +1,48 @@
+#! /usr/bin/env python3
+"""Encode arbitrary strings with ANSI background coloring."""
+
+from argparse import ArgumentParser, Namespace
+from sys import stdin, stdout
+
+
+def get_args(description: str = __doc__) -> Namespace:
+    """Parse command line arguments."""
+
+    parser = ArgumentParser(description=description)
+    parser.add_argument('-d', '--decode', action='store_true')
+    return parser.parse_args()
+
+
+def color_code(data: bytes, *, end: str = '\x1b[0m') -> str:
+    """Color code the bytes."""
+
+    return ''.join(
+        f'\x1b[{int(octet) + 40}m ' for octet
+        in reversed(oct(int.from_bytes(data, 'little'))[2:])
+    ) + end
+
+
+def decode_colors(text: str) -> bytes:
+    """Decode a color code."""
+
+    return (i := int(''.join(
+        str(int(code) - 40) for code
+        in reversed(text.replace('\x1b[', '').replace('m', '').split()[:-1])
+    ), 8)).to_bytes(i.bit_length() // 8 + bool(i.bit_length() % 8), 'little')
+
+
+def main() -> None:
+    """Run the script."""
+
+    args = get_args()
+
+    if args.decode:
+        for line in stdin:
+            stdout.buffer.write(decode_colors(line))
+            stdout.flush()
+    else:
+        print(color_code(stdin.buffer.read()))
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,32 @@
+#!/bin/sh
+# find all .git dirs from current cwd, returns lines in form:
+# remote.origin.url 'cwd_relative_path' remote_branch_name
+# -aur as $1 arg to exclude aur repos from output
+
+[ "$1" = "-aur" ] && exclude_aur=1
+
+# we ignore .dirs at first-level of our current cwd
+git_configs=$(find ./* -type f -path "*/.git/config")
+
+add_line() { composed=$(printf "%s\n%-70s '%s' %s\n" "$composed" "$1" "$2" "$3"); }
+
+OLDIFS="$IFS"
+# set Internal Field Separator to new line
+IFS='
+'
+for config_file in $git_configs; do
+    url="$(git config -f "$config_file" --get remote.origin.url)"
+    path="$(echo "$config_file" | sed "s/\.git.*$//")"  # remove everything starting from .git
+    branch_remote="$(git config -f "$config_file" --name-only --get-regexp "^branch[.].*[.]remote$")"
+    branch_name="$(echo "$branch_remote" | sed 's/^branch[.]//; s/[.]remote$//')"
+    add_line "$url" "$path" "$branch_name"
+done
+IFS="$OLDIFS" # restore
+
+# exclude aur repos from output
+[ "$exclude_aur" ] && composed="$(echo "$composed" | grep -v "//aur.archlinux.org/")"
+
+# format into compact table
+out=$(echo "$composed" | column -to ' ')
+
+echo "$out"

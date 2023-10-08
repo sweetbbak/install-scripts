@@ -1,0 +1,217 @@
+#!/usr/bin/env bash
+#
+# script name: vs
+# description: suite of video editing scripts
+# usage: vs <command> [options]
+# dependencies: ffmpeg, dateutils, sed, awk
+
+# show how to use the commands
+help () {
+	case $1 in
+		"")
+			echo "commands:"
+			echo " - clip"
+			echo " - trim"
+			echo " - concat"
+			echo " - help"
+			echo ""
+			echo "for help on a specific command run: vs help <command>"
+			echo ""
+			echo "usage: vs <command>"
+			;;
+		clip)
+			echo "clip is used to extract the segment of a video file from between two timestamps"
+			echo ""
+			echo "usage: vs clip <input> <start> <end> [output]"
+			;;
+		trim)
+			echo "trim is used to trim a video from either to or starting from a timestamp"
+			echo ""
+			echo "usage: vs trim <input> [-f|--from] <start|end> [output]"
+			echo ""
+			echo "options:"
+			echo "-f, --from: start the clip at the timestamp (default trims until timestamp)"
+			;;
+		concat|merge|join)
+			echo "concat is used to merge two video files together"
+			echo ""
+			echo "usage: vs concat [-e|--encode] <output> <input> <input> [inputs...]"
+			echo ""
+			echo "options:"
+			echo "-e, --encode: allow for different codecs to be used"
+			;;
+		*)
+			echo "no help available for that command"
+			;;
+	esac
+}
+
+# make a clip from video timestamps
+clip () {
+	# ensure all args are passed
+	if test -z "$1"; then
+		echo "you need to specify an input file"
+		return 1
+	elif ! test -f "$1"; then
+		echo "the file specified doesn't exist"
+		return 1
+	fi
+
+	# no need to test for the second arg, both it and the third need to be present
+	if test -z "$3"; then
+		echo "you need to specify a start and end time for the clip"
+		return 1
+	fi
+
+	# convert timestamps to useable values
+	start="$2"
+	finish="$3"
+
+	# since we specify the input format below, we need to ensure that our timestamps
+	# are properly formatted by padding them with 00: until the have 00:00:xx format
+	while test "$(echo "$start" | grep -o ':' | wc -l)" -lt "2"; do
+		start="00:$start"
+	done
+	while test "$(echo "$finish" | grep -o ':' | wc -l)" -lt "2"; do
+		finish="00:$finish"
+	done
+
+	# convert the end timestamp into a duration for ffmpeg to work with
+	duration="$(datediff --input-format="%H:%M:%S" --format="%S" "$start" "$finish")"
+
+	# add a second to avoid cutting off at the beginning of the second
+	((duration="$duration"+1))
+
+	# if the timestamp is negative, swap the start with the finish
+	# duration between is the same, so no need to recalculate
+	if echo "$duration" | grep -q '-'; then
+		start="$finish"
+	fi
+
+	# if output filename isn't specified, generate one with the timestamp
+	if test -z "$4"; then
+		filename="${1%.*}"
+		extension="${1##*.}"
+		output="$filename [$start-$finish].$extension"
+	else
+		output="$4"
+	fi
+
+	# finally, extract the clip with ffmpeg
+	ffmpeg -i "$1" -ss "$start" -t "$duration" -c copy "$output"
+}
+
+# trim video
+trim () {
+	# if -s is passed, start from the timestamp
+	if test "$2" = "-f" || test "$2" = "--from"; then
+		start="$3"
+		finish="$(mediainfo --Output="Video;%Duration/String3%" "$1")"
+		output="$4"
+	else
+		start="00:00:00"
+		finish="$2"
+		((finish=finish-1))
+		output="$3"
+	fi
+
+	# ez reuse of clip functionality
+	clip "$1" "$start" "$finish" "$output"
+}
+
+# join two videos together
+concat () {
+	encode=false
+
+	# check if should account for multiple codecs
+	if test "$1" = "-e" || test "$1" = "--encode"; then
+		encode=true
+		shift
+	fi
+
+	if test -z "$1"; then
+		echo "you need to specify an output filename"
+		return 1
+	elif test -z "$3"; then
+		echo "you need to specify at least two clips"
+		return 1
+	fi
+
+	# save output filename
+	output="$1"
+	shift
+
+	if test encode; then
+		# get list of inputs
+		inputstring=""
+
+		for i in "$@"; do
+			inputstring="$inputstring -i $i"
+		done
+
+		# generate the mapping string
+		numclips="$#"
+		mapstring=""
+		for (( i = 0; i<numclips; i++ )); do
+			mapstring="$mapstring [$i:v] [$i:a]"
+		done
+
+		echo "$mapstring"
+
+		ffmpeg \
+			$inputstring \
+			-filter_complex "$mapstring concat=n=$numclips:v=1:a=1 [v] [a]" \
+			-map "[v]" -map "[a]" "$output"
+	else
+		# generate file list from args
+		for i in "$@"; do
+			echo "file '$i'" >> ./_vs_file_list.txt
+		done
+
+		if test -f "./_vs_file_list.txt"; then
+			# run the command
+			ffmpeg -f concat -safe 0 -i ./_vs_file_list.txt -c copy "$1"
+
+			# cleanup
+			rm ./_vs_file_list.txt
+		else
+			echo "no input files specified"
+			return 1
+		fi
+	fi
+}
+
+main () {
+	# fail if no command
+	if test -z "$1"; then
+		echo "you need to specify a command"
+		return 1
+	fi
+
+	# save the command and remove it from args
+	command="$1"
+	shift
+
+	# choose a command
+	case $command in
+		clip)
+			clip "$@"
+			;;
+		trim)
+			trim "$@"
+			;;
+		concat|merge|join)
+			concat "$@"
+			;;
+		help)
+			help "$1"
+			;;
+		*)
+			echo "that is not a valid command"
+			return 1
+			;;
+	esac
+}
+
+main  "$@"
+

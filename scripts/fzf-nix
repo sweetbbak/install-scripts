@@ -1,0 +1,30 @@
+#!/bin/bash
+
+pkg="$HOME/.cache/nix-pkgs.txt"
+
+create_list(){
+    echo -e "\e[3;33;3mCreating Package list - may take a while...\e[0m"
+    nix-env -qa -P | awk '{print $1}' > "$pkg"
+}
+
+# Do updates to package/options lists
+NIXAGE=$(date -r "$pkg" +%s)
+NOW=$(date -r +%s)
+
+if [[ ( $(( ($NIXAGE - $NOW) / 60 )) -gt 180 ) ]]; then
+    create_list &
+fi
+
+[ ! -f "${pkg}" ] && create_list
+
+selection=$(
+cat "$pkg" | fzf \
+    --reverse \
+    --prompt="NixOS Packages> " \
+    --preview="echo -e \"{1}\n\"; nix-env -qa --description -A {1}" \
+    --preview-window=wrap
+)
+
+[ -n "$selection" ] && {
+    nix-env iA "${selection}"
+}

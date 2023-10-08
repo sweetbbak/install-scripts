@@ -1,0 +1,11 @@
+#!/bin/bash
+
+item="$1"
+if [ -f "$item" ]; then  
+    bat -p --color=always "${item}"
+elif [ -d "$item" ]; then
+     exa --icons "${item}"
+elif [ -x "$item" ]; then
+    file "$item" | grep ASCII && bat -p --color=always "${item}"
+fi
+

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# exe file for odd
+odl="$HOME/Downloads/OpenDirectoryDownloader-2.9.0/OpenDirectoryDownloader"
+# dir for scans
+odscans="$HOME/Downloads/OpenDirectoryDownloader-2.9.0/Scans"
+
+url="$(gum input --placeholder "Enter  a URL")"
+
+"$odl" -f --url "$url"

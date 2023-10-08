@@ -1,0 +1,38 @@
+#!/bin/bash
+# simple script to do selective recording of different outputs
+# requires pw-cli and pw-record (pipewire)
+# set -x
+out=out.mp3
+
+pick() {
+    output="$(pw-cli list-objects | grep node.name | fzf --height=5% --reverse | awk '{print $3}')"
+
+    printf "\e[33m%s\n\e[0m" "recording... press CTRL+C to quit"
+    pw-record --target="${output}" "${out}"
+}
+
+all() {
+    printf "\e[33m%s\n\e[0m" "recording... press CTRL+C to quit"
+    pw-record "${out}"
+}
+
+help() {
+    printf "\e[33m%s\n\e[0m" "${0##*/}"
+    printf "\e[33m%s\n\e[0m" "script to record from the command line. with the option to selectively choose the source"
+    printf "\e[33m%s\n\e[0m" "-c choose output module to record"
+    printf "\e[33m%s\n\e[0m" "-o set the output file name"
+    printf "\e[33m%s\n\e[0m" "-h print this help message"
+}
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -o) shift && unset "$out" && out="${1}" ;;
+        -c) picker=true ;;
+        -h) help ;;
+    esac
+shift
+done
+
+# this fixes the out of order arguments
+[ "$picker" = true ] && pick
+[ -z "$picker" ] && all

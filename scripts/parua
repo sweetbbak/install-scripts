@@ -1,0 +1,2 @@
+#!/bin/bash
+paru -Ss "$1" | sed -nE 's|^[a-z]*/([^ ]*).*|\1|p' | fzf --preview 'paru -Si {} | bat --language=yaml --color=always -pp' --preview-window right:65%:wrap -m | gum confirm && paru -S

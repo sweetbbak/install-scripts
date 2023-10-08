@@ -1,0 +1,15 @@
+#!/bin/bash
+
+sleep 2
+link="$(wl-paste)"
+
+# check if is link
+case "$link" in
+	https*^[a-zA-Z1-9]*) gallery-dl "$link" ;;
+	https*) gallery-dl "$link" ;;
+esac
+
+case "$link" in
+	https*twitter*) gallery-dl "$link" ;;
+	https*^[a-z]*) gallery-dl "$link" ;;
+esac

@@ -1,0 +1,68 @@
+#!/bin/bash
+
+if [ "$1" = "help" ] || [ "$1" = "-h" ] || [ "$1" = "--h" ] || [ "$1" = "--help" ];then
+    printf "
+    Usage:
+            mangareader -h          You are here
+            mangareader             Format images in the current folder
+            mangareader <folder>    Format images in <folder>
+            Observation: please edit script to change the default browser
+"
+
+            exit
+fi
+
+
+
+browser="firefox"
+target="$1"
+
+if [ -n "$target" ] && [ -d "$target" ]; then
+    cd "$target" || return
+fi
+
+html (){
+printf '<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<title>Manga Reader</title>
+		
+		<style>
+		img{
+			float:left;
+			/*border: 2px solid #222222;*/ /*for longstrip, comment this line*/
+			margin-left: 500px;
+		}
+		/*
+		.padright::after{
+			padding-right: 500px;
+		}*/
+		div{
+			/*border: 3px <!--solid #4CAF50;-->*/
+  			/*padding: 5px;*/
+		}
+		.clearfix::after {
+  			content: "";
+  			clear: both;
+  			display: table;
+		}
+		</style>
+	</head>
+	<body bgcolor="#000000">
+		<font color="#ffffff"
+'
+# path=$(pwd)
+# for i in $(\ls -v)
+for i in $(fd . "$target" -e png -e jpg -e gif )
+do
+	printf '<div class=clearfix><img src="%s" width="1100"><br clear="all" />' "$i"
+done
+printf '	</body>
+</html>
+'
+}
+
+html > '/tmp/mangareader.html'
+$browser '/tmp/mangareader.html'
