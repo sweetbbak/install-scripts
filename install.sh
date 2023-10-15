@@ -39,7 +39,7 @@ install_paru_aur() {
 
 installs=(
     starship
-    exa
+    eza
     paruz
     bat
     ranger

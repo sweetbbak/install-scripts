@@ -3,28 +3,38 @@ typeset -U path PATH
 
 # bins
 path=(
-  ~/.local/bin
-  ~/bin
-  ~/.cargo/bin
-  ~/go/bin
-  $path
+~/.local/bin
+~/bin
+~/.cargo/bin
+~/go/bin
+$path
 )
 
 # language bins
-path=(~/.luarocks/bin ~/node_modules/.bin $path)
+path=(
+~/.luarocks/bin
+~/node_modules/.bin
+$path
+)
 # script dirs
-path=(~/scripts ~/scripts/fzf-bin ~/src ~/dev ~/dev/bin $path)
-# appimages and apps
+path=(
+~/scripts
+~/scripts/fzf-bin
+~/src
+~/dev
+~/dev/bin
+$path
+)
 
-path+=(~/bin/**/*(N/))
 # get dirs at 1 depth in bin
+path+=(~/bin/**/*(N/))
 
 # Define user directories
 XDG_DATA_HOME="$HOME/.local/share"
 XDG_CONFIG_HOME="$HOME/.config"
 XDG_CACHE_HOME="$HOME/.cache"
 XDG_STATE_HOME="$HOME/.local/state"
-
+# xdg user dirs
 XDG_DESKTOP_DIR="$HOME/Desktop"
 XDG_DOWNLOAD_DIR="$HOME/Downloads"
 XDG_TEMPLATES_DIR="$HOME/Templates"
@@ -35,6 +45,16 @@ XDG_PICTURES_DIR="$HOME/Pictures"
 XDG_VIDEOS_DIR="$HOME/Videos"
 
 export PATH
+
+fpath+=(
+/home/sweet/.config/zsh/plugins/forgit/completions/
+)
+
+export FPATH
+
+# source your secrets from another file and dont push them to git
+# email key
+. "$HOME/.secrets/resend-email.key"
 
 # env vars for image-upload-cli
 # export CAPTION_FONT= # The default font is system dependent.

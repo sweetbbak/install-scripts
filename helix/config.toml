@@ -1,4 +1,6 @@
-theme = "ferra"
+theme = "fleet_dark"
+# theme = "gruvbox"
+# theme = "ferra"
 # theme = "rose_pine_moon"
 # theme = "monokai_pro"
 # theme = "gruvbox_original_dark_medium"
@@ -19,7 +21,7 @@ render = "none"
 
 [editor.indent-guides]
 render = true
-character = "│" # Some characters that work well: "▏", "┆", "┊", "⸽", "│" 
+character = "▏" # Some characters that work well: "▏", "┆", "┊", "⸽", "│" 
 skip-levels = 0
 
 # Helix's statusline
@@ -29,9 +31,9 @@ center = ["file-name", "diagnostics"]
 right = ["selections", "file-encoding", "file-type", "position", "position-percentage"]
 separator = "│"
 # separator = ""
-mode.normal = "NORMAL  "
-mode.insert = "INSERT  "
-mode.select = "SELECT 麗"
+mode.normal = "NORMAL  "
+mode.insert = "NSERT  "
+mode.select = "SELECT  "
 
 [keys.normal]
 esc = ["collapse_selection", "keep_primary_selection"]

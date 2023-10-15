@@ -1,4 +1,29 @@
 ## some handy functions I've written or collected
+CLIPBOARD=wl-copy
+
+# bookmark directory
+bm () {
+    # usage: bm bookmark (bookmarks current directory)
+    [ -f ~/.config/to ] || touch ~/.config/to
+    if grep -E $PWD'$' ~/.config/to
+    then
+        echo ...already exists
+    else
+        echo "$PWD" >> ~/.config/to
+    fi
+}
+
+# pair to bookmark - jump to dir
+to () {
+    q=" $*"
+    q=${q// -/ !}
+    # allows typing "to foo -bar", which becomes "foo !bar" in the fzf query
+    cd "$(fzf -1 +m -q "$q" < ~/.config/to)"
+}
+
+include_raw_exe() {
+    xxd --include "${@}" | $CLIPBOARD
+}
 
 bytes() {
     [ -f "${1}"  ] && {
