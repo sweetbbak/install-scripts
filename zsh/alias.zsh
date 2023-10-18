@@ -8,13 +8,12 @@ alias v='nvim'
 alias nv='nvim'
 alias cat='bat -p'
 alias gsw='gamescope -f -W 1920 -H 1080 -- wine'
+
 # Core utils + replacements
 alias ls="eza --icons"
-alias ll='eza -Fal'
-alias l='eza --long --grid'
+alias ll='eza -Fal --icons  --group-directories-first '
+alias l='eza --long --grid --icons'
 alias lsd="eza -l --group-directories-first"
-# alias lsa='ls -d -- .*(/)'
-# alias lsd='ls -d -- .*(.)'
 
 alias e="eza --icons --color=always"
 alias ee="eza --icons --color=always -a"
